@@ -1,0 +1,63 @@
+{
+  "project_info": {
+    "project_name": "IoT Cloud for Sustainable Communities",
+    "version": "1.0"
+  },
+  "system_settings": {
+    "mqtt_broker": {
+      "host": "test.mosquitto.org",
+      "port": 1883,
+      "base_topic": "polito/smartcampus"
+    },
+    "service_discovery_interval": 60
+  },
+  
+  "devices": [
+    {
+      "id": "dev_wifi_01",
+      "type": "wifi",
+      "location": {
+          "campus": "polito_cittadella",
+          "building": "R",
+          "floor": "floor_0",
+          "room": "R1"
+      },
+      "update_interval": 30,
+      "resources": ["wifi_sensor"],
+      "mqtt_topics": {
+          "wifi_sensor": "polito/smartcampus/R/floor_0/R1/wifi"
+      }
+    },
+    {
+      "id": "dev_temp_01",
+      "type": "temperature",
+      "location": {
+          "campus": "polito_cittadella",
+          "building": "R",
+          "floor": "floor_0",
+          "room": "R1"
+      },
+      "update_interval": 300,
+      "resources": ["temperature_sensor", "temperature_actuator"],
+      "mqtt_topics": {
+          "temperature_sensor": "polito/smartcampus/R/floor_0/R1/temp/value",
+          "temperature_actuator": "polito/smartcampus/R/floor_0/R1/temp/cmd"
+      }
+    }
+  ],
+
+  "users": [
+    {
+      "id": "user_001",
+      "name": "Mya",
+      "role": "admin"
+    }
+  ],
+
+  "services": [
+     {
+        "id": "service_thingspeak",
+        "description": "Thingspeak Adaptor"
+     }
+  ]
+}
