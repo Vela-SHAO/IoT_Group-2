@@ -1,0 +1,18 @@
+{
+  "campus": "POLITO",
+  "building": "R",
+  "broker_address": "localhost",
+  "broker_port": 1883,
+  "rooms": [
+    { "room_id": "R1", "type": "Sala gradonata", "capacity": 300, "floor": "Piano Terra", "current_people": 0 },
+    { "room_id": "R1B", "type": "Aula", "capacity": 150, "floor": "Piano Primo", "current_people": 0 },
+    { "room_id": "R2", "type": "Sala gradonata", "capacity": 300, "floor": "Piano Terra", "current_people": 0 },
+    { "room_id": "R2B", "type": "Aula", "capacity": 150, "floor": "Piano Primo", "current_people": 0 },
+    { "room_id": "R3", "type": "Sala gradonata", "capacity": 300, "floor": "Piano Terra", "current_people": 0 },
+    { "room_id": "R3B", "type": "Aula", "capacity": 150, "floor": "Piano Primo", "current_people": 0 },
+    { "room_id": "R4", "type": "Sala gradonata", "capacity": 300, "floor": "Piano Terra", "current_people": 0 },
+    { "room_id": "R4B", "type": "Aula", "capacity": 150, "floor": "Piano Primo", "current_people": 0 },
+    { "room_id": "RS1", "type": "Sale studio", "capacity": 50, "floor": "Piano Terra", "current_people": 0 },
+    { "room_id": "RS2", "type": "Sale studio", "capacity": 50, "floor": "Piano Primo", "current_people": 0 }
+  ]
+}
