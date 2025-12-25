@@ -48,9 +48,8 @@ class DevicesAPI:
     @cherrypy.tools.json_out()
     def GET(self, *uri, **params):
         with self.store.lock:
-            # 现在 self.store.catalog 是存在的了
             original_list = self.store.catalog.get("devices", [])
-            devices_list = original_list[:] # 浅拷贝，线程安全
+            devices_list = original_list[:] 
 
         if len(uri) == 0:
             return devices_list

@@ -351,6 +351,176 @@
         "floor": "1",
         "room": "RS2"
       }
+    },
+    {
+      "id": "R1_temperature_actuator_1",
+      "type": "temperature",
+      "resources": [
+        "cmd"
+      ],
+      "mqtt_topics": {
+        "cmd": "polito/smartcampus/R1/temperature/1/cmd"
+      },
+      "update_interval": 30,
+      "location": {
+        "campus": "POLITO",
+        "building": "R",
+        "floor": "0",
+        "room": "R1"
+      }
+    },
+    {
+      "id": "R1B_temperature_actuator_1",
+      "type": "temperature",
+      "resources": [
+        "cmd"
+      ],
+      "mqtt_topics": {
+        "cmd": "polito/smartcampus/R1B/temperature/1/cmd"
+      },
+      "update_interval": 30,
+      "location": {
+        "campus": "POLITO",
+        "building": "R",
+        "floor": "1",
+        "room": "R1B"
+      }
+    },
+    {
+      "id": "R2_temperature_actuator_1",
+      "type": "temperature",
+      "resources": [
+        "cmd"
+      ],
+      "mqtt_topics": {
+        "cmd": "polito/smartcampus/R2/temperature/1/cmd"
+      },
+      "update_interval": 30,
+      "location": {
+        "campus": "POLITO",
+        "building": "R",
+        "floor": "0",
+        "room": "R2"
+      }
+    },
+    {
+      "id": "R2B_temperature_actuator_1",
+      "type": "temperature",
+      "resources": [
+        "cmd"
+      ],
+      "mqtt_topics": {
+        "cmd": "polito/smartcampus/R2B/temperature/1/cmd"
+      },
+      "update_interval": 30,
+      "location": {
+        "campus": "POLITO",
+        "building": "R",
+        "floor": "1",
+        "room": "R2B"
+      }
+    },
+    {
+      "id": "R3_temperature_actuator_1",
+      "type": "temperature",
+      "resources": [
+        "cmd"
+      ],
+      "mqtt_topics": {
+        "cmd": "polito/smartcampus/R3/temperature/1/cmd"
+      },
+      "update_interval": 30,
+      "location": {
+        "campus": "POLITO",
+        "building": "R",
+        "floor": "0",
+        "room": "R3"
+      }
+    },
+    {
+      "id": "R3B_temperature_actuator_1",
+      "type": "temperature",
+      "resources": [
+        "cmd"
+      ],
+      "mqtt_topics": {
+        "cmd": "polito/smartcampus/R3B/temperature/1/cmd"
+      },
+      "update_interval": 30,
+      "location": {
+        "campus": "POLITO",
+        "building": "R",
+        "floor": "1",
+        "room": "R3B"
+      }
+    },
+    {
+      "id": "R4_temperature_actuator_1",
+      "type": "temperature",
+      "resources": [
+        "cmd"
+      ],
+      "mqtt_topics": {
+        "cmd": "polito/smartcampus/R4/temperature/1/cmd"
+      },
+      "update_interval": 30,
+      "location": {
+        "campus": "POLITO",
+        "building": "R",
+        "floor": "0",
+        "room": "R4"
+      }
+    },
+    {
+      "id": "R4B_temperature_actuator_1",
+      "type": "temperature",
+      "resources": [
+        "cmd"
+      ],
+      "mqtt_topics": {
+        "cmd": "polito/smartcampus/R4B/temperature/1/cmd"
+      },
+      "update_interval": 30,
+      "location": {
+        "campus": "POLITO",
+        "building": "R",
+        "floor": "1",
+        "room": "R4B"
+      }
+    },
+    {
+      "id": "RS1_temperature_actuator_1",
+      "type": "temperature",
+      "resources": [
+        "cmd"
+      ],
+      "mqtt_topics": {
+        "cmd": "polito/smartcampus/RS1/temperature/1/cmd"
+      },
+      "update_interval": 30,
+      "location": {
+        "campus": "POLITO",
+        "building": "R",
+        "floor": "0",
+        "room": "RS1"
+      }
+    },
+    {
+      "id": "RS2_temperature_actuator_1",
+      "type": "temperature",
+      "resources": [
+        "cmd"
+      ],
+      "mqtt_topics": {
+        "cmd": "polito/smartcampus/RS2/temperature/1/cmd"
+      },
+      "update_interval": 30,
+      "location": {
+        "campus": "POLITO",
+        "building": "R",
+        "floor": "1",
+        "room": "RS2"
+      }
     }
   ],
   "users": [

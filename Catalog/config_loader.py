@@ -36,11 +36,16 @@ class RoomConfigLoader:
             "api_path": catalog.get("api_path", "/api")
         }
 
-    def get_room_config(self, target_room_id):
+    def get_room_config(self, target_room_id=None):
 
         # 1. 提取全局信息 (Project Info)
         project_info = self.data.get("project_info", {})
         campus = project_info.get("campus", "Unknown")
+        rooms_list = self.data.get("rooms", [])
+
+        # 2. 如果没有指定房间，返回所有所有房间名称
+        if not target_room_id:
+            return [room["room_id"] for room in rooms_list]
 
 
         # 3. 查找具体房间
