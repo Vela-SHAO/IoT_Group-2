@@ -19,12 +19,12 @@
         "val"
       ],
       "mqtt_topics": {
-        "val": "polito/smartcampus/R1/temperature/R1_temperature_sensor_1/value"
+        "val": "polito/smartcampus/R1/temperature/1/value"
       },
       "update_interval": 30,
       "location": {
         "campus": "POLITO",
-        "building": "Unknown",
+        "building": "R",
         "floor": "0",
         "room": "R1"
       }
@@ -36,12 +36,12 @@
         "val"
       ],
       "mqtt_topics": {
-        "val": "polito/smartcampus/R1/wifi/R1_wifi_sensor_1/value"
+        "val": "polito/smartcampus/R1/wifi/1/value"
       },
       "update_interval": 10,
       "location": {
         "campus": "POLITO",
-        "building": "Unknown",
+        "building": "R",
         "floor": "0",
         "room": "R1"
       }
@@ -53,12 +53,12 @@
         "val"
       ],
       "mqtt_topics": {
-        "val": "polito/smartcampus/R1B/temperature/R1B_temperature_sensor_1/value"
+        "val": "polito/smartcampus/R1B/temperature/1/value"
       },
       "update_interval": 30,
       "location": {
         "campus": "POLITO",
-        "building": "Unknown",
+        "building": "R",
         "floor": "1",
         "room": "R1B"
       }
@@ -70,12 +70,12 @@
         "val"
       ],
       "mqtt_topics": {
-        "val": "polito/smartcampus/R1B/wifi/R1B_wifi_sensor_1/value"
+        "val": "polito/smartcampus/R1B/wifi/1/value"
       },
       "update_interval": 10,
       "location": {
         "campus": "POLITO",
-        "building": "Unknown",
+        "building": "R",
         "floor": "1",
         "room": "R1B"
       }
@@ -87,12 +87,12 @@
         "val"
       ],
       "mqtt_topics": {
-        "val": "polito/smartcampus/R2/temperature/R2_temperature_sensor_1/value"
+        "val": "polito/smartcampus/R2/temperature/1/value"
       },
       "update_interval": 30,
       "location": {
         "campus": "POLITO",
-        "building": "Unknown",
+        "building": "R",
         "floor": "0",
         "room": "R2"
       }
@@ -104,12 +104,12 @@
         "val"
       ],
       "mqtt_topics": {
-        "val": "polito/smartcampus/R2/wifi/R2_wifi_sensor_1/value"
+        "val": "polito/smartcampus/R2/wifi/1/value"
       },
       "update_interval": 10,
       "location": {
         "campus": "POLITO",
-        "building": "Unknown",
+        "building": "R",
         "floor": "0",
         "room": "R2"
       }
@@ -121,12 +121,12 @@
         "val"
       ],
       "mqtt_topics": {
-        "val": "polito/smartcampus/R2B/temperature/R2B_temperature_sensor_1/value"
+        "val": "polito/smartcampus/R2B/temperature/1/value"
       },
       "update_interval": 30,
       "location": {
         "campus": "POLITO",
-        "building": "Unknown",
+        "building": "R",
         "floor": "1",
         "room": "R2B"
       }
@@ -138,12 +138,12 @@
         "val"
       ],
       "mqtt_topics": {
-        "val": "polito/smartcampus/R2B/wifi/R2B_wifi_sensor_1/value"
+        "val": "polito/smartcampus/R2B/wifi/1/value"
       },
       "update_interval": 10,
       "location": {
         "campus": "POLITO",
-        "building": "Unknown",
+        "building": "R",
         "floor": "1",
         "room": "R2B"
       }
@@ -155,12 +155,12 @@
         "val"
       ],
       "mqtt_topics": {
-        "val": "polito/smartcampus/R3/temperature/R3_temperature_sensor_1/value"
+        "val": "polito/smartcampus/R3/temperature/1/value"
       },
       "update_interval": 30,
       "location": {
         "campus": "POLITO",
-        "building": "Unknown",
+        "building": "R",
         "floor": "0",
         "room": "R3"
       }
@@ -172,12 +172,12 @@
         "val"
       ],
       "mqtt_topics": {
-        "val": "polito/smartcampus/R3/wifi/R3_wifi_sensor_1/value"
+        "val": "polito/smartcampus/R3/wifi/1/value"
       },
       "update_interval": 10,
       "location": {
         "campus": "POLITO",
-        "building": "Unknown",
+        "building": "R",
         "floor": "0",
         "room": "R3"
       }
@@ -189,12 +189,12 @@
         "val"
       ],
       "mqtt_topics": {
-        "val": "polito/smartcampus/R3B/temperature/R3B_temperature_sensor_1/value"
+        "val": "polito/smartcampus/R3B/temperature/1/value"
       },
       "update_interval": 30,
       "location": {
         "campus": "POLITO",
-        "building": "Unknown",
+        "building": "R",
         "floor": "1",
         "room": "R3B"
       }
@@ -206,12 +206,12 @@
         "val"
       ],
       "mqtt_topics": {
-        "val": "polito/smartcampus/R3B/wifi/R3B_wifi_sensor_1/value"
+        "val": "polito/smartcampus/R3B/wifi/1/value"
       },
       "update_interval": 10,
       "location": {
         "campus": "POLITO",
-        "building": "Unknown",
+        "building": "R",
         "floor": "1",
         "room": "R3B"
       }
@@ -223,12 +223,12 @@
         "val"
       ],
       "mqtt_topics": {
-        "val": "polito/smartcampus/R4/temperature/R4_temperature_sensor_1/value"
+        "val": "polito/smartcampus/R4/temperature/1/value"
       },
       "update_interval": 30,
       "location": {
         "campus": "POLITO",
-        "building": "Unknown",
+        "building": "R",
         "floor": "0",
         "room": "R4"
       }
@@ -240,12 +240,12 @@
         "val"
       ],
       "mqtt_topics": {
-        "val": "polito/smartcampus/R4/wifi/R4_wifi_sensor_1/value"
+        "val": "polito/smartcampus/R4/wifi/1/value"
       },
       "update_interval": 10,
       "location": {
         "campus": "POLITO",
-        "building": "Unknown",
+        "building": "R",
         "floor": "0",
         "room": "R4"
       }
@@ -257,12 +257,12 @@
         "val"
       ],
       "mqtt_topics": {
-        "val": "polito/smartcampus/R4B/temperature/R4B_temperature_sensor_1/value"
+        "val": "polito/smartcampus/R4B/temperature/1/value"
       },
       "update_interval": 30,
       "location": {
         "campus": "POLITO",
-        "building": "Unknown",
+        "building": "R",
         "floor": "1",
         "room": "R4B"
       }
@@ -274,12 +274,12 @@
         "val"
       ],
       "mqtt_topics": {
-        "val": "polito/smartcampus/R4B/wifi/R4B_wifi_sensor_1/value"
+        "val": "polito/smartcampus/R4B/wifi/1/value"
       },
       "update_interval": 10,
       "location": {
         "campus": "POLITO",
-        "building": "Unknown",
+        "building": "R",
         "floor": "1",
         "room": "R4B"
       }
@@ -291,12 +291,12 @@
         "val"
       ],
       "mqtt_topics": {
-        "val": "polito/smartcampus/RS1/temperature/RS1_temperature_sensor_1/value"
+        "val": "polito/smartcampus/RS1/temperature/1/value"
       },
       "update_interval": 30,
       "location": {
         "campus": "POLITO",
-        "building": "Unknown",
+        "building": "R",
         "floor": "0",
         "room": "RS1"
       }
@@ -308,12 +308,12 @@
         "val"
       ],
       "mqtt_topics": {
-        "val": "polito/smartcampus/RS1/wifi/RS1_wifi_sensor_1/value"
+        "val": "polito/smartcampus/RS1/wifi/1/value"
       },
       "update_interval": 10,
       "location": {
         "campus": "POLITO",
-        "building": "Unknown",
+        "building": "R",
         "floor": "0",
         "room": "RS1"
       }
@@ -325,12 +325,12 @@
         "val"
       ],
       "mqtt_topics": {
-        "val": "polito/smartcampus/RS2/temperature/RS2_temperature_sensor_1/value"
+        "val": "polito/smartcampus/RS2/temperature/1/value"
       },
       "update_interval": 30,
       "location": {
         "campus": "POLITO",
-        "building": "Unknown",
+        "building": "R",
         "floor": "1",
         "room": "RS2"
       }
@@ -342,12 +342,12 @@
         "val"
       ],
       "mqtt_topics": {
-        "val": "polito/smartcampus/RS2/wifi/RS2_wifi_sensor_1/value"
+        "val": "polito/smartcampus/RS2/wifi/1/value"
       },
       "update_interval": 10,
       "location": {
         "campus": "POLITO",
-        "building": "Unknown",
+        "building": "R",
         "floor": "1",
         "room": "RS2"
       }

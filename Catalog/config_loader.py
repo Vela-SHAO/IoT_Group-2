@@ -23,10 +23,17 @@ class RoomConfigLoader:
     def get_broker_info(self):
         mqtt = self.data.get("mqtt_config", {})
         return {
-            "broker": mqtt.get("broker_address", "127.0.0.1"),
-            "port": mqtt.get("broker_port", 1883),
-            "catalog_url": mqtt.get("catalog_url", "http://127.0.0.1:8080"),
+            "broker": mqtt.get("broker_address", "test.mosquitto.org"),
+            "broker_port": mqtt.get("broker_port", 1883),
             "base_topic_prefix": mqtt.get("base_topic_prefix", "polito/smartcampus")
+        }
+    
+    def get_catalog_info(self):
+        catalog = self.data.get("catalog_config", {})
+        return {
+            "host": catalog.get("host", "127.0.0.1"),
+            "port": catalog.get("port", 8080),
+            "api_path": catalog.get("api_path", "/api")
         }
 
     def get_room_config(self, target_room_id):
@@ -34,7 +41,6 @@ class RoomConfigLoader:
         # 1. 提取全局信息 (Project Info)
         project_info = self.data.get("project_info", {})
         campus = project_info.get("campus", "Unknown")
-        building = project_info.get("building", "Unknown")
 
 
         # 3. 查找具体房间
@@ -51,7 +57,7 @@ class RoomConfigLoader:
         return {
             "location": {
                 "campus": campus,
-                "building": building,
+                "building": found_room["building"],  # 用字母 "R"
                 "floor": found_room["floor"],      # 用数字 "0"
                 "room": target_room_id
             },

@@ -6,66 +6,80 @@
   "mqtt_config": {
     "broker_address": "test.mosquitto.org",
     "broker_port": 1883,
-    "base_topic_prefix": "polito/smartcampus",
-    "catalog_url": "http://127.0.0.1:8080"
+    "base_topic_prefix": "polito/smartcampus"
+  },
+  "catalog_config": {
+    "host": "127.0.0.1",
+    "port": 8080,
+    "api_path": "/api"
   },
   "rooms": [
     { 
       "room_id": "R1", 
+      "building": "R",
       "type": "Sala gradonata", 
       "capacity": 300, 
       "floor": "0"
     },
     { 
       "room_id": "R1B", 
+      "building": "R",
       "type": "Aula", 
       "capacity": 150, 
       "floor": "1"
     },
     { 
       "room_id": "R2", 
+      "building": "R",
       "type": "Sala gradonata", 
       "capacity": 300, 
       "floor": "0"
     },
     { 
       "room_id": "R2B", 
+      "building": "R",
       "type": "Aula", 
       "capacity": 150, 
       "floor": "1"
     },
     { 
       "room_id": "R3", 
+      "building": "R",
       "type": "Sala gradonata", 
       "capacity": 300, 
       "floor": "0"
     },
     { 
       "room_id": "R3B", 
+      "building": "R",
       "type": "Aula", 
       "capacity": 150, 
       "floor": "1"
     },
     { 
       "room_id": "R4", 
+      "building": "R",
       "type": "Sala gradonata", 
       "capacity": 300, 
       "floor": "0"
     },
     { 
       "room_id": "R4B", 
+      "building": "R",
       "type": "Aula", 
       "capacity": 150, 
       "floor": "1"
     },
     { 
       "room_id": "RS1", 
+      "building": "R",
       "type": "Sale studio", 
       "capacity": 24, 
       "floor": "0"
     },
     { 
       "room_id": "RS2", 
+      "building": "R",
       "type": "Sale studio", 
       "capacity": 24, 
       "floor": "1"

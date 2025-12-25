@@ -6,53 +6,77 @@ sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")
 from Catalog.config_loader import RoomConfigLoader
 
 class GenericDevice:
-    def __init__(self, room, index, catalog_type, role, frequency):
+    def __init__(self, room, index, sensor_type, role, frequency):
 
         self.room = room
-        self.catalog_type = catalog_type
+        self.index = index
+        self.sensor_type = sensor_type
         self.role = role
         self.frequency = frequency
+        self.device_id = f"{self.room}_{self.sensor_type}_{self.role}_{self.index}"
+
+        self.broker = None
+        self.port = None
+        self.base_topic = None
+        self.client = None
+        self.mqtt_topics = {}
 
         loader = RoomConfigLoader("setting_config.json")
-        broker_info = loader.get_broker_info()
-        self.broker = broker_info["broker"]
-        self.port = broker_info["port"]
-        self.catalog_url = broker_info["catalog_url"] + "/api/devices"
-        self.base_topic_prefix = broker_info["base_topic_prefix"]
-        print(f"DEBUG: Catalog URL is {self.catalog_url}")
+        cata_info = loader.get_catalog_info()
+        self.catalog_url = f"http://{cata_info['host']}:{cata_info['port']}{cata_info['api_path']}"
+        self.location = loader.get_room_config(room)["location"]
 
-        location = loader.get_room_config(room)["location"]
-        self.campus = location["campus"]
-        self.building = location["building"]
-        self.floor = location["floor"]
+        if not self._discover_services():
+            raise ConnectionError("CRITICAL: Failed to discover MQTT Broker from Catalog!")
+    
+    def _discover_services(self):
+        service_url = f"{self.catalog_url}/services"
+        print(f"[{self.device_id}] Discovering services at {service_url}...")
 
-
-        self.device_id = f"{self.room}_{self.catalog_type}_{self.role}_{index}"
-        self.base_topic = f"{self.base_topic_prefix}/{room}/{self.catalog_type}/{self.device_id}"
+        try:
+            res = requests.get(service_url)
+            if res.status_code != 200:
+                print(f"[-] Service Discovery Failed with status code: {res.status_code}")
+                return False
+            
+            services = res.json()
+            for service in services:
+                if service["service_type"] == "mqtt":
+                    self.broker = service["endpoint"]["broker"]
+                    self.port = service["endpoint"]["broker_port"]
+                    
+                    topic_template = service["endpoint"].get("topic_structure")
+                    self.base_topic = topic_template.format(
+                        room_id=self.room,
+                        device_type=self.sensor_type,
+                        index_number=self.index
+                    )
+                    return True
+            
+            print("[-] MQTT Broker service not found in Catalog.")
+            return False
         
-        self.mqtt_topics = {} 
-
+        except Exception as e:
+            print(f"   [-] Discovery failed: {e}")
+            return False
+        
     def register_to_catalog(self, specific_topics):
 
         print(f"[*] Registering {self.device_id}...")
+        device_url = f"{self.catalog_url}/devices"
         
         payload = {
             "id": self.device_id,
-            "type": self.catalog_type,  # 记住：Catalog 只要 "temperature" 或 "wifi"
+            "type": self.sensor_type,  # 记住：Catalog 只要 "temperature" 或 "wifi"
             "resources": list(specific_topics.keys()),
             "mqtt_topics": specific_topics,
             "update_interval": self.frequency,
-            "location": {
-                "campus": self.campus,
-                "building": self.building,
-                "floor": self.floor,
-                "room": self.room
-            }
+            "location": self.location
         }
 
         try:
             # 发送请求
-            res = requests.post(self.catalog_url, json=payload)
+            res = requests.post(device_url, json=payload)
             if res.status_code in [200, 201]:
                 print(f"[+] Registered: {self.device_id}")
                 return True
@@ -69,6 +93,10 @@ class GenericDevice:
         # 通用的 MQTT 连接逻辑
         self.client = mqtt.Client(client_id=self.device_id)
         print(f"[*] Connecting to Broker: {self.broker}...")
-        self.client.connect(self.broker, self.port)
-        self.client.loop_start()
-        return self.client
+        try:
+            self.client.connect(self.broker, self.port)
+            self.client.loop_start()
+            return self.client
+        except Exception as e:
+            print(f"   [!] MQTT Connection failed: {e}")
+            return None

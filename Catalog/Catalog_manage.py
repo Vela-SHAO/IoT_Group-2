@@ -15,7 +15,6 @@ class CatalogStore:
     def __init__(self, path):
         self.path = path
         self.lock = threading.RLock()
-        # [修正 1] 将 self.data 改名为 self.catalog，与 API 中的调用保持一致
         self.catalog = {} 
 
         if os.path.exists(path):
@@ -156,18 +155,52 @@ class UsersAPI:
             self.store.save()
         
         cherrypy.response.status = 201
-        return {"status": "ok", "id": target_id}
+    
+# ==========================================
+# 第四部分：API 接口 (Services)
+# 负责处理 /api/services 的请求
+# ==========================================
+class ServicesAPI:
+    exposed = True
+    def __init__(self, store: CatalogStore, config_loader):
+        self.store = store
+        self.config_loader = config_loader
+        
+    @cherrypy.tools.json_out()
+    def GET(self, *uri, **params):
+        broker_info = self.config_loader.get_broker_info() 
+        catalog_info = self.config_loader.get_catalog_info()
+        
+        services = [
+            {
+                "id": "MQTT_BROKER_01",
+                "service_type": "mqtt",
+                "endpoint": {
+                    "broker": broker_info.get("broker"),
+                    "broker_port": broker_info.get("broker_port"),
+                    "topic_structure": f'{broker_info.get("base_topic_prefix")}/{{room_id}}/{{device_type}}/{{index_number}}'
+                }
+            },
+            {
+                "id": "REST_CATALOG_01",
+                "service_type": "catalog",
+                "endpoint": {
+                    "url": f"http://{catalog_info['host']}:{catalog_info['port']}{catalog_info['api_path']}"
+                }
+            }
+        ]
+        return services
 
 # ==========================================
 # 第四部分：服务器启动与路由挂载
 # ==========================================
 def run(host="0.0.0.0", port=8080):
-    # [修正 3] 使用绝对路径，防止找不到文件
+
     current_dir = os.path.dirname(os.path.abspath(__file__))
     path = os.path.join(current_dir, "catalog_script.json")
     config_path = os.path.join(current_dir, "setting_config.json")
     
-    # 自动创建目录（如果不存在）
+
     os.makedirs(os.path.dirname(path), exist_ok=True)
     
     store = CatalogStore(path)
@@ -190,6 +223,7 @@ def run(host="0.0.0.0", port=8080):
 
     cherrypy.tree.mount(DevicesAPI(store), '/api/devices', config=conf)
     cherrypy.tree.mount(UsersAPI(store),   '/api/users',   config=conf)
+    cherrypy.tree.mount(ServicesAPI(store, loader), '/api/services', config=conf)
 
     cherrypy.config.update({
         'server.socket_host': host,

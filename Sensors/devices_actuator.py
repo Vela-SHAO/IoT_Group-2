@@ -51,49 +51,30 @@ class Controller(GenericDevice):
                 print(f"[+] Setting mode to {mode_value}")
             
         except json.JSONDecodeError:
-            # 如果 Breaker 发来的不是 JSON，而是纯数字或字符串
+
             print(f">>> Unvalid: {payload}")
 
 
     def start(self):
-        # 1. 向 Catalog 注册 (这步和 Sensor 一样，直接送分)
+
         if not self.register_to_catalog(self.topics):
             return
 
-        # 2. 连接 MQTT (这也一样)
+
         client = self.connect_mqtt()
 
-        # =======================================================
-        # [填空 4] 设置 MQTT 回调逻辑 (最难的部分)
-        # =======================================================
-        # 目标：告诉 Paho 库，“每当收到新消息，请帮我运行这个函数”。
-        # 提示 1：你需要定义一个内部函数 on_message(client, userdata, msg)
-        # 提示 2：在内部函数里，调用上面的 self.notify()。
-        #        注意 msg 对象里有 msg.topic 和 msg.payload (是二进制，要 .decode())
         
         def on_message(client, userdata, msg):
             self.notify(msg.topic, msg.payload.decode())
 
         
-        # 这一行是把你的函数挂载到 client 上
         client.on_message = on_message
 
-
-        # =======================================================
-        # [填空 5] 订阅 Topic
-        # =======================================================
-        # 目标：告诉 Broker，“我要监听这个频道”。
-        # 提示：使用 client.subscribe()
-        # 参数：是我们定义的 self.topics['cmd']
         target_topic = self.topics['cmd']
         client.subscribe(target_topic)
 
         print(f"[*] Controller started. Listening on: {self.topics['cmd']}")
 
-        # 3. 保持运行
-        # 思考：为什么这里不需要像 Sensor 那样写 while True: publish?
-        # 因为 loop_start() 已经在后台线程帮我们收消息了。
-        # 我们只需要让主线程不退出即可。
         try:
             while True:
                 time.sleep(1)
@@ -102,8 +83,7 @@ class Controller(GenericDevice):
             print("Controller Stopped")
 
 if __name__ == "__main__":
-    # 请在这里写代码实例化 Controller 并运行
-    # 模拟：R1 房间的第 1 号温度控制器
+
     room = "R1"
     index = 1
     catalog_type = "temperature"

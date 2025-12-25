@@ -8,9 +8,9 @@ from devices_base import GenericDevice
 # 职责：注册 -> 连接 -> 循环生成数据 -> 发布
 # ==========================================
 class Sensor(GenericDevice):
-    def __init__(self, room, index, catalog_type, frequency):
+    def __init__(self, room, index, sensor_type, frequency):
 
-        super().__init__(room, index, catalog_type, "sensor", frequency)
+        super().__init__(room, index, sensor_type, "sensor", frequency)
         self.topics = {"val": self.base_topic + "/value"}
 
     def start(self):
@@ -26,7 +26,7 @@ class Sensor(GenericDevice):
         try:
             while True:
                 # 待修改：生成模拟数据
-                if self.catalog_type == "temperature":
+                if self.sensor_type == "temperature":
                     value = round(random.uniform(20.0, 30.0), 2)
                 # 待修改：生成模拟数据
                 else:
@@ -36,7 +36,7 @@ class Sensor(GenericDevice):
                 payload = {
                     "id": self.device_id,
                     "v": value,
-                    "u": "C" if self.catalog_type == "temperature" else "%",
+                    "u": "C" if self.sensor_type == "temperature" else "%",
                     "t": time.time()
                 }
 
@@ -54,8 +54,8 @@ class Sensor(GenericDevice):
 if __name__ == "__main__":
     room = "R1"
     index = 1
-    catalog_type = "temperature"
+    sensor_type = "temperature"
     frequency = 30
-    sensor = Sensor(room, index, catalog_type, frequency)
+    sensor = Sensor(room, index, sensor_type, frequency)
     sensor.start()
 
