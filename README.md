@@ -137,6 +137,5 @@ Topic 的具体结构逻辑 定义在服务端代码 (Catalog_manage.py) 中，�
 
 2. 后缀规范 (Suffix Standards)
 为了区分“数据上传”和“控制指令”，我们在基础 Topic 后增加了功能后缀：
-    Suffix (后缀),Direction (方向),Role (角色),Description (说明)
-    /val,Pub (设备 -> 云端),Sensor,传感器上传的遥测数据 (如温度值、人数)。例: .../temperature/1/val
-    /cmd,Sub (云端 -> 设备),Actuator,执行器监听的控制指令 (如开关空调)。例: .../temperature/1/cmd
+    <img width="677" height="331" alt="image" src="https://github.com/user-attachments/assets/f0d7ddcb-eb15-48a9-bbfd-41210876240a" />
+
