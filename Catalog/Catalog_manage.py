@@ -206,7 +206,7 @@ class ServicesAPI:
         broker_info = self.config_loader.get_broker_info() 
         catalog_info = self.config_loader.get_catalog_info()
         
-        services = [
+        static_services = [
             {
                 "id": "MQTT_BROKER_01",
                 "service_type": "mqtt",
@@ -224,7 +224,57 @@ class ServicesAPI:
                 }
             }
         ]
-        return services
+
+        with self.store.lock:
+            # 浅拷贝一份，防止并发问题
+            registered_services = self.store.catalog.get("services", [])[:]
+
+        # 3. 如果是查询特定 ID (/api/services/ID)
+        if len(uri) > 0:
+            target_id = uri[0]
+            # 先找静态的
+            for s in static_services:
+                if str(s['id']) == str(target_id): return s
+            # 再找动态的
+            for s in registered_services:
+                if str(s['id']) == str(target_id): return s
+            
+            raise cherrypy.HTTPError(404, "Service not found")
+
+        # 4. 如果是查询所有，合并两者返回
+        # 静态在前，动态在后
+        return static_services + registered_services
+    
+    
+    @cherrypy.tools.json_in()
+    @cherrypy.tools.json_out()
+    def POST(self, *uri, **params):
+        obj = cherrypy.request.json
+
+        if "id" not in obj:
+            raise cherrypy.HTTPError(400, "Missing required field: id")
+        if "service_type" not in obj:
+            raise cherrypy.HTTPError(400, "Missing required field: service_type")
+        if "endpoint" not in obj:
+            raise cherrypy.HTTPError(400, "Missing required field: endpoint")
+        
+        with self.store.lock:
+            data_list = self.store.catalog.setdefault("services", [])
+            target_id = str(obj["id"])
+
+            for i, item in enumerate(data_list):
+                if str(item.get("id")) == target_id:
+                    print(f"[Service] Update existing: {target_id}")
+                    data_list[i] = obj
+                    break
+            else:
+                print(f"[Service] Register new: {target_id}")
+                data_list.append(obj)
+            
+            self.store.save()
+
+        cherrypy.response.status = 201
+        return {"message": "Registered", "id": target_id}
 
 # ==========================================
 # 第四部分：服务器启动与路由挂载
