@@ -69,21 +69,39 @@ class OccupancyAnalyzer:
 
     def process_analysis(self, room_id, count):
         try:
-            # 获取房间容量 (RS1/RS2 为 24)
+            # 1. 获取房间配置
             room_meta = self.loader.get_room_config(room_id)["meta"]
             capacity = room_meta["capacity"]
             
-            # 调用逻辑脚本 (模拟温度 28°C)
+            # 2. 调用逻辑判断
             ac_on = decide_hvac_status(28, count, capacity)
             is_free = room_id in self.schedule.get(self.get_current_slot(), [])
             
-            # 全英文展示 (For Professor Presentation)
-            hvac_status = "❄️ HVAC_ON" if ac_on else "💤 HVAC_OFF"
-            usage_status = "✅ AVAILABLE" if is_free else "📚 IN_CLASS"
+            # 3. 【修改】打包成 Mya 要求的JSON 格式
+            analysis_result = {
+                "room_id": room_id,
+                "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+                "status": {
+                    "students_count": count,
+                    "capacity": capacity,
+                    "is_available": is_free,
+                    "hvac_status": "ON" if ac_on else "OFF"
+                },
+                "raw_flags": {
+                    "usage": "AVAILABLE" if is_free else "IN_CLASS",
+                    "ac_icon": "❄️" if ac_on else "💤"
+                }
+            }
             
-            print(f"[{room_id:5}] Students: {count:3}/{capacity:3} | {usage_status:10} | {hvac_status}")
+            # 4. 打印 JSON 字符串（方便 Mya 后续取值）
+            print(json.dumps(analysis_result))
+            
+            # 5. (可选) 如果需要发回 MQTT 供其他设备订阅
+            # self.client.publish(f"building/analysis/{room_id}", json.dumps(analysis_result))
+
         except Exception as e:
-            pass # 忽略配置未匹配的房间
+            # print(f"[DEBUG] Skipping or Error for room {room_id}: {e}")
+            pass
 
     def start(self):
         client = mqtt.Client()
