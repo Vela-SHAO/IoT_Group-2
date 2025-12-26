@@ -51,15 +51,36 @@ class DevicesAPI:
             original_list = self.store.catalog.get("devices", [])
             devices_list = original_list[:] 
 
-        if len(uri) == 0:
+
+        if len(uri) > 0:
+            device_id = uri[0]
+            for item in devices_list:
+                if item['id'] == device_id:
+                    return item
+
+            raise cherrypy.HTTPError(404, "Device not found")
+    
+        if not params:
             return devices_list
 
-        device_id = uri[0] 
-        for item in devices_list:
-            if str(item["id"]) == str(device_id):
-                return item
-        
-        raise cherrypy.HTTPError(404, "Device not found")
+        filtered_results = []
+        for dev in devices_list:
+            match = True
+            
+            if 'id' in params and dev['id'] != params['id']:
+                match = False
+
+            if 'room' in params:
+                if dev.get('location', {}).get('room') != params['room']:
+                    match = False
+            
+            if 'type' in params and dev.get('type') != params['type']:
+                match = False
+            
+            if match:
+                filtered_results.append(dev)
+
+        return filtered_results
 
     @cherrypy.tools.json_in()
     @cherrypy.tools.json_out()
@@ -115,15 +136,30 @@ class UsersAPI:
             original_list = self.store.catalog.get("users", [])
             user_list = original_list[:]
 
-        if len(uri) == 0:
+        if len(uri) > 0:
+            user_id = uri[0]
+            for u in user_list:
+                if str(u.get("id")) == str(user_id):
+                    return u
+                
+            raise cherrypy.HTTPError(404, "User not found")
+        
+        if not params:
             return user_list
+        filtered_results = []
+        for user in user_list:
+            match = True
 
-        user_id = uri[0]
-        for u in user_list:
-            if str(u.get("id")) == str(user_id):
-                return u
+            if 'name'in params and user.get('name') != params['name']:
+                match = False   
             
-        raise cherrypy.HTTPError(404, "User not found")
+            if 'role' in params and user.get('role') != params['role']:
+                match = False
+            if match:
+                filtered_results.append(user)
+
+        return filtered_results
+
 
     @cherrypy.tools.json_in()
     @cherrypy.tools.json_out()
