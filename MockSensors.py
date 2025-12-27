@@ -16,7 +16,7 @@ while True:
     occupancy = random.randint(0, 150)
     
     # 必须是这个精确的 Topic
-    topic = f"polito/smartcampus/{room}/occupancy/value"
+    topic = f"polito/smartcampus/{room}/wifi/1/value"
     client.publish(topic, str(occupancy))
     
     print(f">>> Sent to {topic}: {occupancy} students")

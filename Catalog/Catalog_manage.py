@@ -288,6 +288,7 @@ def run(host="0.0.0.0", port=8080):
     
     loader = None 
 
+    loader = None  # <12.27修改，因在运行OccupancyAnalyzer时找不到loader：在 try 之前先定义它，哪怕是空的
     try:
         loader = RoomConfigLoader(config_filename)
         broker_conf = loader.get_broker_info()

@@ -521,6 +521,144 @@
         "floor": "1",
         "room": "RS2"
       }
+    },
+    {
+      "id": "Analysis_R2",
+      "type": "analysis_result",
+      "resources": [
+        "status",
+        "hvac"
+      ],
+      "mqtt_topics": {
+        "val": "polito/smartcampus/R2/analysis/1"
+      },
+      "location": {
+        "campus": "POLITO",
+        "building": "R",
+        "floor": "0",
+        "room": "R2"
+      },
+      "last_value": {
+        "room_id": "R2",
+        "status": "occupied",
+        "hvac_status": "ON",
+        "timestamp": "2025-12-27 15:05:10"
+      }
+    },
+    {
+      "id": "Analysis_RS1",
+      "type": "analysis_result",
+      "resources": [
+        "status",
+        "hvac"
+      ],
+      "mqtt_topics": {
+        "val": "polito/smartcampus/RS1/analysis/1"
+      },
+      "location": {
+        "campus": "POLITO",
+        "building": "R",
+        "floor": "0",
+        "room": "RS1"
+      },
+      "last_value": {
+        "room_id": "RS1",
+        "status": "occupied",
+        "hvac_status": "ON",
+        "timestamp": "2025-12-27 15:05:20"
+      }
+    },
+    {
+      "id": "Analysis_R1",
+      "type": "analysis_result",
+      "resources": [
+        "status",
+        "hvac"
+      ],
+      "mqtt_topics": {
+        "val": "polito/smartcampus/R1/analysis/1"
+      },
+      "location": {
+        "campus": "POLITO",
+        "building": "R",
+        "floor": "0",
+        "room": "R1"
+      },
+      "last_value": {
+        "room_id": "R1",
+        "status": "occupied",
+        "hvac_status": "ON",
+        "timestamp": "2025-12-27 15:05:15"
+      }
+    },
+    {
+      "id": "Analysis_RS2",
+      "type": "analysis_result",
+      "resources": [
+        "status",
+        "hvac"
+      ],
+      "mqtt_topics": {
+        "val": "polito/smartcampus/RS2/analysis/1"
+      },
+      "location": {
+        "campus": "POLITO",
+        "building": "R",
+        "floor": "0",
+        "room": "RS2"
+      },
+      "last_value": {
+        "room_id": "RS2",
+        "status": "occupied",
+        "hvac_status": "ON",
+        "timestamp": "2025-12-27 15:05:00"
+      }
+    },
+    {
+      "id": "Analysis_R1B",
+      "type": "analysis_result",
+      "resources": [
+        "status",
+        "hvac"
+      ],
+      "mqtt_topics": {
+        "val": "polito/smartcampus/R1B/analysis/1"
+      },
+      "location": {
+        "campus": "POLITO",
+        "building": "R",
+        "floor": "0",
+        "room": "R1B"
+      },
+      "last_value": {
+        "room_id": "R1B",
+        "status": "occupied",
+        "hvac_status": "ON",
+        "timestamp": "2025-12-27 15:01:55"
+      }
+    },
+    {
+      "id": "Analysis_R2B",
+      "type": "analysis_result",
+      "resources": [
+        "status",
+        "hvac"
+      ],
+      "mqtt_topics": {
+        "val": "polito/smartcampus/R2B/analysis/1"
+      },
+      "location": {
+        "campus": "POLITO",
+        "building": "R",
+        "floor": "0",
+        "room": "R2B"
+      },
+      "last_value": {
+        "room_id": "R2B",
+        "status": "occupied",
+        "hvac_status": "ON",
+        "timestamp": "2025-12-27 15:05:05"
+      }
     }
   ],
   "users": [
