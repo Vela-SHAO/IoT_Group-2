@@ -8,8 +8,26 @@ from devices_sensor import Sensor
 
 
 current_dir = os.path.dirname(os.path.abspath(__file__))
-project_root = os.path.abspath(os.path.join(current_dir, ".."))
-config_path = os.path.join(project_root, "Catalog", "setting_config.json")
+project_root = os.path.dirname(current_dir)
+
+
+config_filename = "setting_config.json"
+
+possible_paths = [
+            os.path.join(project_root, config_filename),  
+            os.path.join(current_dir, config_filename),   
+            config_filename                               
+        ]
+
+config_path = None
+
+for path in possible_paths:
+    if os.path.exists(path):
+        config_path = path
+        break
+        
+if config_path is None:
+    config_path = os.path.join(project_root, config_filename)
 
 loader = RoomConfigLoader(config_path)
 

@@ -2,23 +2,38 @@ import json
 import os
 
 class RoomConfigLoader:
-    def __init__(self, config_path):
-        # 自动处理绝对路径，防止文件找不到
-        if not os.path.isabs(config_path):
-            current_dir = os.path.dirname(os.path.abspath(__file__))
-            config_path = os.path.join(current_dir, config_path)
-            
-        self.config_path = config_path
+    def __init__(self, config_filename):
+        current_dir = os.path.dirname(os.path.abspath(__file__))
+        project_root = os.path.dirname(current_dir)
+
+
+        possible_paths = [
+            os.path.join(project_root, config_filename),  
+            os.path.join(current_dir, config_filename),   
+            config_filename                               
+        ]
+
+        self.config_path = None
+
+        for path in possible_paths:
+            if os.path.exists(path):
+                self.config_path = path
+                break
+        
+        if self.config_path is None:
+            self.config_path = os.path.join(project_root, config_filename)
+
         self.data = self._load_data()
 
     def _load_data(self):
+        print(f"[*] Loading config from: {self.config_path}") 
         try:
             with open(self.config_path, 'r', encoding='utf-8') as f:
                 return json.load(f)
         except FileNotFoundError:
-            raise FileNotFoundError(f"[-] Config file missing: {self.config_path}")
+            raise FileNotFoundError(f"[-] Config file NOT found at: {self.config_path}")
         except json.JSONDecodeError:
-            raise ValueError(f"[-] Config file is not valid JSON: {self.config_path}")
+            raise ValueError(f"[-] Invalid JSON format in: {self.config_path}")
     
     def get_broker_info(self):
         mqtt = self.data.get("mqtt_config", {})
@@ -73,12 +88,3 @@ class RoomConfigLoader:
         }
 
 
-if __name__ == "__main__":
-    loader = RoomConfigLoader("setting_config.json")
-    try:
-        broker_info = loader.get_broker_info()
-        print(f"Broker Info: {broker_info}")
-        conf = loader.get_room_config("R1")
-        print(f"成功加载 R1 配置: {conf}")
-    except Exception as e:
-        print(e)

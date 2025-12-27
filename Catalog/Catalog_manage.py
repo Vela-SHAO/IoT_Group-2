@@ -226,23 +226,19 @@ class ServicesAPI:
         ]
 
         with self.store.lock:
-            # 浅拷贝一份，防止并发问题
+            
             registered_services = self.store.catalog.get("services", [])[:]
 
-        # 3. 如果是查询特定 ID (/api/services/ID)
+        
         if len(uri) > 0:
             target_id = uri[0]
-            # 先找静态的
             for s in static_services:
                 if str(s['id']) == str(target_id): return s
-            # 再找动态的
             for s in registered_services:
                 if str(s['id']) == str(target_id): return s
-            
             raise cherrypy.HTTPError(404, "Service not found")
 
-        # 4. 如果是查询所有，合并两者返回
-        # 静态在前，动态在后
+      
         return static_services + registered_services
     
     
@@ -283,21 +279,23 @@ def run(host="0.0.0.0", port=8080):
 
     current_dir = os.path.dirname(os.path.abspath(__file__))
     path = os.path.join(current_dir, "catalog_script.json")
-    config_path = os.path.join(current_dir, "setting_config.json")
     
-
+    config_filename = "setting_config.json"
+    
     os.makedirs(os.path.dirname(path), exist_ok=True)
     
     store = CatalogStore(path)
+    
+    loader = None 
 
     try:
-        loader = RoomConfigLoader(config_path)
+        loader = RoomConfigLoader(config_filename)
         broker_conf = loader.get_broker_info()
-        print(f"[*] Loaded System Config. MQTT Broker: {broker_conf['broker']}:{broker_conf['port']}")
-        
+        print(f"[*] Loaded System Config. MQTT Broker: {broker_conf.get('broker')}:{broker_conf.get('broker_port')}")
         
     except Exception as e:
-        print(f"[!] Warning: Failed to load settings ({e}). Using defaults.")
+        print(f"[!] Warning: Failed to load settings ({e}).")
+        print("[!] ServicesAPI will NOT be mounted because config is missing.")
 
     conf = {
         '/': {
@@ -308,7 +306,11 @@ def run(host="0.0.0.0", port=8080):
 
     cherrypy.tree.mount(DevicesAPI(store), '/api/devices', config=conf)
     cherrypy.tree.mount(UsersAPI(store),   '/api/users',   config=conf)
-    cherrypy.tree.mount(ServicesAPI(store, loader), '/api/services', config=conf)
+    
+    if loader:
+        cherrypy.tree.mount(ServicesAPI(store, loader), '/api/services', config=conf)
+    else:
+        print("[!] SKIP: /api/services not mounted due to config error.")
 
     cherrypy.config.update({
         'server.socket_host': host,
