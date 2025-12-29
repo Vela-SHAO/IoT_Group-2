@@ -5,6 +5,8 @@ import requests
 import paho.mqtt.client as mqtt
 from datetime import datetime
 
+
+import random
 # 保持对 ThermalLogic 的引用
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 if BASE_DIR not in sys.path:
@@ -118,7 +120,124 @@ class OccupancyAnalyzer:
         client.connect(self.broker, self.port, 60)
         client.loop_forever()
 
-if __name__ == "__main__":
-    # 传入 Catalog 的地址
-    analyzer = OccupancyAnalyzer("http://127.0.0.1:8080")
-    analyzer.start()
+# if __name__ == "__main__":
+#     # 传入 Catalog 的地址
+#     analyzer = OccupancyAnalyzer("http://127.0.0.1:8080")
+#     analyzer.start()
+        
+
+
+
+
+
+
+#模拟用，之后可以替换成真实数据。
+class simulate:
+    def simu_people(capacity,isAvailavle:bool)-> int:
+        random.seed(42)
+        if isAvailavle:            
+            current_people = random.randint(0,int(capacity/3))
+            return current_people
+        else:
+            current_people = random.randint(int(capacity/3),int(1.2*capacity))
+            return current_people
+        
+    def simu_temperature(month)-> float:
+        random.seed(42)
+        if month in [5,6,7,8]:
+            temperature = round(random.uniform(15,29),1)
+            return temperature
+        else:
+            temperature = round(random.uniform(10,25),1)
+            return temperature
+
+
+
+#现在课表是每天一致的。后期再优化周几的问题吧。目前只做小时：分钟的匹配。
+def read_nonOccupiedScedule(schedule_path)->dict[str,list]:
+    with open(schedule_path,"r",encoding="utf-8")as file:
+        available_schedule = json.load(file)
+        return available_schedule
+    
+#计算落在哪个时间段    
+def match_slot(hour:int, minute:int,slot_count)->int|None:
+    start = 8*60 +30 #slot1 start 8:30
+    end = 19*60 #slot 7 end at 19:00
+    slot_length =90 
+    askingTime = hour* 60 +minute
+    if askingTime <start or askingTime >end:
+        return None
+    
+    slot_index =((askingTime-start)/slot_length)+1
+    if slot_index > slot_count :
+        return None
+    return slot_index
+
+#translate timestamp into dict
+def parse_timestamp(timestamp)->dict:
+    dt = datetime.datetime.fromtimestamp(timestamp)
+    month = dt.month
+    weekday = dt.strftime("%A")
+
+    hour = dt.hour
+    minute = dt.minute
+    return {
+        "month":month,
+        "weekday":weekday,
+        "hour":hour,
+        "minute":minute
+    }
+
+#get non occupied room from json 
+#后续可以考虑是否加入weekday
+def get_available_room(request_hour,request_minute,schedule_path)->list:
+
+
+    available_schedule = read_nonOccupiedScedule(schedule_path)
+    slot_count = len(available_schedule)
+    slot_index = match_slot(request_hour,request_minute,slot_count)
+
+    available_rooms_list=available_schedule.get(slot_index,[])
+    return available_rooms_list
+
+#read setting_config
+def get_room_info(path)->list[dict]:
+    with open(path,"r",encoding="utf-8")as file:
+        data = json.load(file)
+        room_info = data["room"]
+        return room_info
+
+
+def get_student_dashboard_response(timestamp):
+    dt = parse_timestamp(timestamp)
+    request_weekday = dt["weekday"]  
+    request_hour = dt["hour"]
+    request_minute = dt["minute"]
+    request_month = dt["month"]
+
+    schedule_path = "schedule.json"
+    available_rooms_list=get_available_room(request_hour,request_minute,schedule_path)
+
+    room_info_path ="setting_config.json"
+    room_info= get_room_info(room_info_path)
+
+    for room in room_info:
+        temperature = simulate.simu_temperature(request_month)            
+        room["temperature"]=temperature
+
+        if room["room_id"]in available_rooms_list:
+            isAvailable = True
+            students = simulate.simu_people(room["capacity"],isAvailable)
+            room["available"]=isAvailable
+            room["students"] =students
+        else:
+            isAvailable = False
+            students = simulate.simu_people(room["capacity"],isAvailable)
+            room["available"]=isAvailable
+            room["students"] =students
+
+    
+    return room_info
+
+# if __name__==  "__main__":
+    
