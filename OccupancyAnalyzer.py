@@ -134,7 +134,7 @@ class OccupancyAnalyzer:
 #模拟用，之后可以替换成真实数据。
 class simulate:
     def simu_people(capacity,isAvailavle:bool)-> int:
-        random.seed(42)
+
         if isAvailavle:            
             current_people = random.randint(0,int(capacity/3))
             return current_people
@@ -143,7 +143,7 @@ class simulate:
             return current_people
         
     def simu_temperature(month)-> float:
-        random.seed(42)
+
         if month in [5,6,7,8]:
             temperature = round(random.uniform(15,29),1)
             return temperature
@@ -175,7 +175,7 @@ def match_slot(hour:int, minute:int,slot_count)->int|None:
 
 #translate timestamp into dict
 def parse_timestamp(timestamp)->dict:
-    dt = datetime.datetime.fromtimestamp(timestamp)
+    dt = datetime.fromtimestamp(timestamp)
     month = dt.month
     weekday = dt.strftime("%A")
 
@@ -204,7 +204,7 @@ def get_available_room(request_hour,request_minute,schedule_path)->list:
 def get_room_info(path)->list[dict]:
     with open(path,"r",encoding="utf-8")as file:
         data = json.load(file)
-        room_info = data["room"]
+        room_info = data["rooms"]
         return room_info
 
 
@@ -220,7 +220,7 @@ def get_student_dashboard_response(timestamp):
 
     room_info_path ="setting_config.json"
     room_info= get_room_info(room_info_path)
-
+    random.seed(42)
     for room in room_info:
         temperature = simulate.simu_temperature(request_month)            
         room["temperature"]=temperature
@@ -239,5 +239,7 @@ def get_student_dashboard_response(timestamp):
     
     return room_info
 
-# if __name__==  "__main__":
-    
+if __name__==  "__main__":
+    timestamp=1735635600 #wed 10:20
+    room_info =get_student_dashboard_response(timestamp)
+    print(room_info)
