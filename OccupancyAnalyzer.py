@@ -3,7 +3,7 @@ import os
 import json
 import requests
 import paho.mqtt.client as mqtt
-from datetime import datetime
+from datetime import datetime, timezone
 
 
 import random
@@ -175,7 +175,7 @@ def match_slot(hour:int, minute:int,slot_count)->int|None:
 
 #translate timestamp into dict
 def parse_timestamp(timestamp)->dict:
-    dt = datetime.fromtimestamp(timestamp)
+    dt = datetime.fromtimestamp(timestamp,tz=timezone.utc)
     month = dt.month
     weekday = dt.strftime("%A")
 
@@ -197,7 +197,7 @@ def get_available_room(request_hour,request_minute,schedule_path)->list:
     slot_count = len(available_schedule)
     slot_index = match_slot(request_hour,request_minute,slot_count)
 
-    available_rooms_list=available_schedule.get(slot_index,[])
+    available_rooms_list=available_schedule.get(str(slot_index),[])
     return available_rooms_list
 
 #read setting_config
@@ -207,8 +207,56 @@ def get_room_info(path)->list[dict]:
         room_info = data["rooms"]
         return room_info
 
+def pick_latest_value(snapshot:dict,room_id:str,device_type:str):
+    ''' snapshot structure:
+    [room_id][device_type][index_number] = {"value":..., "received_at":...}
+    return value dict or None'''
+    room_bucket =snapshot.get(room_id)
+    if not room_bucket:
+        return None
+    type_bucket = snapshot.get(room_id)
+    if not room_bucket:
+        return None
+    latest_item = None
+    latest_received_at = -1
+    for _, item in type_bucket.items():
+        received_at = item.get("received_at",-1)
+        if received_at > latest_received_at:
+            latest_received_at = received_at
+            latest_item = item
 
-def get_student_dashboard_response(timestamp):
+    if latest_item is None:
+        return None
+    
+    return latest_item.get("value")
+
+def fill_from_snapshot_or_simulate(
+        room:dict,request_month,available_rooms_list,snapshot: dict | None):
+    room_id = room["room_id"]
+    is_available = room_id in available_rooms_list
+    room["available"] = is_available
+
+
+    temperature_value = None
+    if snapshot is not None:
+        temperature_value = pick_latest_value(snapshot, room_id, "temperature")
+
+    if temperature_value is None:
+        temperature_value = simulate.simu_temperature(request_month)
+
+    room["temperature"] = temperature_value
+
+
+    people_value = None
+    if snapshot is not None:
+        people_value = pick_latest_value(snapshot, room_id, "wifi")
+
+    if people_value is None:
+        people_value = simulate.simu_people(room["capacity"], is_available)
+
+    room["students"] = people_value
+
+def get_student_dashboard_response(timestamp,snapshot = None):
     dt = parse_timestamp(timestamp)
     request_weekday = dt["weekday"]  
     request_hour = dt["hour"]
@@ -222,19 +270,7 @@ def get_student_dashboard_response(timestamp):
     room_info= get_room_info(room_info_path)
     random.seed(42)
     for room in room_info:
-        temperature = simulate.simu_temperature(request_month)            
-        room["temperature"]=temperature
-
-        if room["room_id"]in available_rooms_list:
-            isAvailable = True
-            students = simulate.simu_people(room["capacity"],isAvailable)
-            room["available"]=isAvailable
-            room["students"] =students
-        else:
-            isAvailable = False
-            students = simulate.simu_people(room["capacity"],isAvailable)
-            room["available"]=isAvailable
-            room["students"] =students
+        fill_from_snapshot_or_simulate(room, request_month, available_rooms_list, snapshot)
 
     
     return room_info
