@@ -4,7 +4,7 @@ import json
 import requests
 import paho.mqtt.client as mqtt
 from datetime import datetime, timezone
-
+import time
 
 import random
 # 保持对 ThermalLogic 的引用
@@ -204,8 +204,8 @@ def get_available_room(request_hour,request_minute,schedule_path)->list:
 def get_room_info(path)->list[dict]:
     with open(path,"r",encoding="utf-8")as file:
         data = json.load(file)
-        room_info = data["rooms"]
-        return room_info
+        rooms_info = data["rooms"]
+        return rooms_info
 
 def pick_latest_value(snapshot:dict,room_id:str,device_type:str):
     ''' snapshot structure:
@@ -214,8 +214,8 @@ def pick_latest_value(snapshot:dict,room_id:str,device_type:str):
     room_bucket =snapshot.get(room_id)
     if not room_bucket:
         return None
-    type_bucket = snapshot.get(room_id)
-    if not room_bucket:
+    type_bucket = room_bucket.get(device_type)
+    if not type_bucket:
         return None
     latest_item = None
     latest_received_at = -1
@@ -267,13 +267,96 @@ def get_student_dashboard_response(timestamp,snapshot = None):
     available_rooms_list=get_available_room(request_hour,request_minute,schedule_path)
 
     room_info_path ="setting_config.json"
-    room_info= get_room_info(room_info_path)
+    rooms_info= get_room_info(room_info_path)
     random.seed(42)
-    for room in room_info:
+    for room in rooms_info:
         fill_from_snapshot_or_simulate(room, request_month, available_rooms_list, snapshot)
 
+    return rooms_info
+
+def deciede_ac_from_room_info(rquest_timestamp,snapshot)->dict[str,dict[str,object]]:
+    ac_decied ={
+        #room_id:{
+            #decied:bool,
+            #decied_time:timestamp
+        #}
+    }
+    rooms_info = get_student_dashboard_response(rquest_timestamp,snapshot)
+    dt = parse_timestamp(timestamp)
+    month = dt["month"]
+
+    for room_id,room_state in rooms_info.items():
+        temperature = room_state.get("temperature")
+        students = room_state.get("students")#people_value current in the classroom
+        capacity = room_state.get("capacity")
+        ac_decision = decied_ac(temperature,students,capacity,month)
+        decied_time = time.time()
+        ac_decied[room_id]["decision"]=ac_decision
+        ac_decied[room_id]["decied_time"] = decied_time
+  
+    return ac_decied
+
+
     
-    return room_info
+  
+def get_mode(month)->str:
+    if month in[5,6,7,8]:
+        return "Cool"
+    elif month in [11,12,1,2,3,4]:
+        return"Heat"
+    else:
+        return "OFF"
+    
+
+def decied_ac(temperature,people,capacity,month)-> bool:
+    summer_lower =24
+    summer_upper =26
+    winter_lower = 20
+    winter_upper = 22
+    occupancy_threshold =0.6 
+    season ={
+        "summer":[5,6,7,8],
+        "winter":[11,12,1,2,3,4],
+        "transition":[9,10]
+    }
+
+
+
+    if temperature is None or people is None or capacity is None or capacity <= 0:
+        return None
+    
+    occupancy_ratio = people / capacity
+    high = occupancy_ratio > occupancy_threshold
+
+    mode = get_mode(month)
+    if mode == "OFF":
+        return None
+    
+    if mode == "Cool":
+        on_threshold = summer_upper -1 if high else summer_upper
+        off_threshold = summer_upper -2 if high else summer_lower
+
+        if temperature>= on_threshold:
+             return True
+        
+        if temperature<=off_threshold:
+            return False
+        return None
+    
+    if mode =="Heat":
+        on_threshold = winter_lower +1 if high else winter_lower
+        off_threshold = winter_lower +2 if high else winter_upper
+
+        if temperature<= on_threshold:
+            return True
+        if temperature>= off_threshold:
+            return False
+        return None
+
+
+
+
+
 
 if __name__==  "__main__":
     timestamp=1735635600 #wed 10:20

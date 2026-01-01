@@ -31,6 +31,17 @@ class Controller:
         self.latest_temperature_by_room = {}
         self.latest_by_room = {}
 
+        self.ac_state_by_room = {
+        # room_id: {
+        #     "should_on": None,            # latest decision（True/False/None）
+        #     "decided_at": None,           # latest decision time
+        #     "actual_on": None,            # real actual(None)
+        #     "actual_reported_at": None,   # real actual time
+        #     "last_cmd_sent_on": None,     
+        #     "last_cmd_sent_at": None      
+        # }
+        }
+
 
         self.latest_people_received_at = None
         self.latest_temperature_received_at = None
@@ -101,7 +112,7 @@ class Controller:
         with self.data_lock:
             room_bucket = self.latest_by_room.setdefault(room_id,{})
             type_bucket = room_bucket.setdefault(device_type,{})
-            type_bucket[index_number]-{
+            type_bucket[index_number]={
                 "sensor_id": sensor_id,
                 "value": value,
                 "unit": unit,
@@ -134,7 +145,7 @@ class RestAPI:
         
 
         #之后把数据处理的参数改为2个，snapshot和request_timestamp
-        result_list = OccupancyAnalyzer.get_student_dashboard_response(request_timestamp)
+        result_list = OccupancyAnalyzer.get_student_dashboard_response(request_timestamp,snapshot)
 
         cherrypy.response.headers["Content-Type"] = "application/json; charset=utf-8"
 
