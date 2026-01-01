@@ -56,7 +56,7 @@ class Sensor(GenericDevice):
                 if self.sensor_type == "temperature":
                     month = datetime.datetime.now().month
                     if month in [11, 12, 1, 2, 3]: 
-                        base = 19.0 # winter
+                        base = 18.5 # winter
                     elif month in [6, 7, 8]:       
                         base = 26.0 # summer
                     else:                          

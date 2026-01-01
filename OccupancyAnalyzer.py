@@ -241,8 +241,8 @@ def fill_from_snapshot_or_simulate(
     if snapshot is not None:
         temperature_value = pick_latest_value(snapshot, room_id, "temperature")
 
-    if temperature_value is None:
-        temperature_value = simulate.simu_temperature(request_month)
+    # if temperature_value is None:
+        # temperature_value = simulate.simu_temperature(request_month)
 
     room["temperature"] = temperature_value
 
@@ -251,8 +251,8 @@ def fill_from_snapshot_or_simulate(
     if snapshot is not None:
         people_value = pick_latest_value(snapshot, room_id, "wifi")
 
-    if people_value is None:
-        people_value = simulate.simu_people(room["capacity"], is_available)
+    # if people_value is None:
+    #     people_value = simulate.simu_people(room["capacity"], is_available)
 
     room["students"] = people_value
 
@@ -274,27 +274,32 @@ def get_student_dashboard_response(timestamp,snapshot = None):
 
     return rooms_info
 
-def deciede_ac_from_room_info(rquest_timestamp,snapshot)->dict[str,dict[str,object]]:
-    ac_decied ={
+def deciede_ac_from_room_info(request_timestamp,snapshot)->dict[str,dict[str,object]]:
+    ac_decided ={
         #room_id:{
             #decied:bool,
             #decied_time:timestamp
         #}
     }
-    rooms_info = get_student_dashboard_response(rquest_timestamp,snapshot)
-    dt = parse_timestamp(timestamp)
+    rooms_info = get_student_dashboard_response(request_timestamp,snapshot)
+    dt = parse_timestamp(request_timestamp)
     month = dt["month"]
-
-    for room_id,room_state in rooms_info.items():
+    decided_time =datetime.now(timezone.utc).timestamp()
+    for room_state in rooms_info:
+        room_id = room_state.get("room_id")
         temperature = room_state.get("temperature")
         students = room_state.get("students")#people_value current in the classroom
         capacity = room_state.get("capacity")
+
         ac_decision = decied_ac(temperature,students,capacity,month)
-        decied_time = time.time()
-        ac_decied[room_id]["decision"]=ac_decision
-        ac_decied[room_id]["decied_time"] = decied_time
-  
-    return ac_decied
+        ac_decided[room_id] = {
+                "should_on": ac_decision,
+                "decide_time": decided_time
+            }
+
+        if ac_decision is not None:
+            print(f"[AC Decider]{room_id}:open is {ac_decided[room_id]['should_on']},people:{students},temperature:{temperature}")
+    return ac_decided
 
 
     
@@ -324,7 +329,8 @@ def decied_ac(temperature,people,capacity,month)-> bool:
 
     if temperature is None or people is None or capacity is None or capacity <= 0:
         return None
-    
+    if people == 0:
+        return False 
     occupancy_ratio = people / capacity
     high = occupancy_ratio > occupancy_threshold
 
