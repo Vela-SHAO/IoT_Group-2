@@ -375,10 +375,10 @@ def main():
         "server.socket_host":"0.0.0.0",
         "server.socket_port":18080
     })
-    # cherrypy.engine.start()
-    # cherrypy.engine.block()
-    while True:
-        time.sleep(1)
+    cherrypy.engine.start()
+    cherrypy.engine.block()
+    # while True:
+    #     time.sleep(1)
 
 
 
