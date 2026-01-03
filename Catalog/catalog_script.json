@@ -356,10 +356,12 @@
       "id": "R1_temperature_actuator_1",
       "type": "temperature",
       "resources": [
-        "cmd"
+        "cmd",
+        "status"
       ],
       "mqtt_topics": {
-        "cmd": "polito/smartcampus/R1/temperature/1/cmd"
+        "cmd": "polito/smartcampus/R1/temperature/1/cmd",
+        "status": "polito/smartcampus/R1/temperature/1/status"
       },
       "update_interval": 30,
       "location": {
@@ -373,10 +375,12 @@
       "id": "R1B_temperature_actuator_1",
       "type": "temperature",
       "resources": [
-        "cmd"
+        "cmd",
+        "status"
       ],
       "mqtt_topics": {
-        "cmd": "polito/smartcampus/R1B/temperature/1/cmd"
+        "cmd": "polito/smartcampus/R1B/temperature/1/cmd",
+        "status": "polito/smartcampus/R1B/temperature/1/status"
       },
       "update_interval": 30,
       "location": {
@@ -390,10 +394,12 @@
       "id": "R2_temperature_actuator_1",
       "type": "temperature",
       "resources": [
-        "cmd"
+        "cmd",
+        "status"
       ],
       "mqtt_topics": {
-        "cmd": "polito/smartcampus/R2/temperature/1/cmd"
+        "cmd": "polito/smartcampus/R2/temperature/1/cmd",
+        "status": "polito/smartcampus/R2/temperature/1/status"
       },
       "update_interval": 30,
       "location": {
@@ -407,10 +413,12 @@
       "id": "R2B_temperature_actuator_1",
       "type": "temperature",
       "resources": [
-        "cmd"
+        "cmd",
+        "status"
       ],
       "mqtt_topics": {
-        "cmd": "polito/smartcampus/R2B/temperature/1/cmd"
+        "cmd": "polito/smartcampus/R2B/temperature/1/cmd",
+        "status": "polito/smartcampus/R2B/temperature/1/status"
       },
       "update_interval": 30,
       "location": {
@@ -424,10 +432,12 @@
       "id": "R3_temperature_actuator_1",
       "type": "temperature",
       "resources": [
-        "cmd"
+        "cmd",
+        "status"
       ],
       "mqtt_topics": {
-        "cmd": "polito/smartcampus/R3/temperature/1/cmd"
+        "cmd": "polito/smartcampus/R3/temperature/1/cmd",
+        "status": "polito/smartcampus/R3/temperature/1/status"
       },
       "update_interval": 30,
       "location": {
@@ -441,10 +451,12 @@
       "id": "R3B_temperature_actuator_1",
       "type": "temperature",
       "resources": [
-        "cmd"
+        "cmd",
+        "status"
       ],
       "mqtt_topics": {
-        "cmd": "polito/smartcampus/R3B/temperature/1/cmd"
+        "cmd": "polito/smartcampus/R3B/temperature/1/cmd",
+        "status": "polito/smartcampus/R3B/temperature/1/status"
       },
       "update_interval": 30,
       "location": {
@@ -458,10 +470,12 @@
       "id": "R4_temperature_actuator_1",
       "type": "temperature",
       "resources": [
-        "cmd"
+        "cmd",
+        "status"
       ],
       "mqtt_topics": {
-        "cmd": "polito/smartcampus/R4/temperature/1/cmd"
+        "cmd": "polito/smartcampus/R4/temperature/1/cmd",
+        "status": "polito/smartcampus/R4/temperature/1/status"
       },
       "update_interval": 30,
       "location": {
@@ -475,10 +489,12 @@
       "id": "R4B_temperature_actuator_1",
       "type": "temperature",
       "resources": [
-        "cmd"
+        "cmd",
+        "status"
       ],
       "mqtt_topics": {
-        "cmd": "polito/smartcampus/R4B/temperature/1/cmd"
+        "cmd": "polito/smartcampus/R4B/temperature/1/cmd",
+        "status": "polito/smartcampus/R4B/temperature/1/status"
       },
       "update_interval": 30,
       "location": {
@@ -492,10 +508,12 @@
       "id": "RS1_temperature_actuator_1",
       "type": "temperature",
       "resources": [
-        "cmd"
+        "cmd",
+        "status"
       ],
       "mqtt_topics": {
-        "cmd": "polito/smartcampus/RS1/temperature/1/cmd"
+        "cmd": "polito/smartcampus/RS1/temperature/1/cmd",
+        "status": "polito/smartcampus/RS1/temperature/1/status"
       },
       "update_interval": 30,
       "location": {
@@ -509,10 +527,12 @@
       "id": "RS2_temperature_actuator_1",
       "type": "temperature",
       "resources": [
-        "cmd"
+        "cmd",
+        "status"
       ],
       "mqtt_topics": {
-        "cmd": "polito/smartcampus/RS2/temperature/1/cmd"
+        "cmd": "polito/smartcampus/RS2/temperature/1/cmd",
+        "status": "polito/smartcampus/RS2/temperature/1/status"
       },
       "update_interval": 30,
       "location": {
@@ -520,144 +540,6 @@
         "building": "R",
         "floor": "1",
         "room": "RS2"
-      }
-    },
-    {
-      "id": "Analysis_R2",
-      "type": "analysis_result",
-      "resources": [
-        "status",
-        "hvac"
-      ],
-      "mqtt_topics": {
-        "val": "polito/smartcampus/R2/analysis/1"
-      },
-      "location": {
-        "campus": "POLITO",
-        "building": "R",
-        "floor": "0",
-        "room": "R2"
-      },
-      "last_value": {
-        "room_id": "R2",
-        "status": "occupied",
-        "hvac_status": "ON",
-        "timestamp": "2025-12-27 15:05:10"
-      }
-    },
-    {
-      "id": "Analysis_RS1",
-      "type": "analysis_result",
-      "resources": [
-        "status",
-        "hvac"
-      ],
-      "mqtt_topics": {
-        "val": "polito/smartcampus/RS1/analysis/1"
-      },
-      "location": {
-        "campus": "POLITO",
-        "building": "R",
-        "floor": "0",
-        "room": "RS1"
-      },
-      "last_value": {
-        "room_id": "RS1",
-        "status": "occupied",
-        "hvac_status": "ON",
-        "timestamp": "2025-12-27 15:05:20"
-      }
-    },
-    {
-      "id": "Analysis_R1",
-      "type": "analysis_result",
-      "resources": [
-        "status",
-        "hvac"
-      ],
-      "mqtt_topics": {
-        "val": "polito/smartcampus/R1/analysis/1"
-      },
-      "location": {
-        "campus": "POLITO",
-        "building": "R",
-        "floor": "0",
-        "room": "R1"
-      },
-      "last_value": {
-        "room_id": "R1",
-        "status": "occupied",
-        "hvac_status": "ON",
-        "timestamp": "2025-12-27 15:05:15"
-      }
-    },
-    {
-      "id": "Analysis_RS2",
-      "type": "analysis_result",
-      "resources": [
-        "status",
-        "hvac"
-      ],
-      "mqtt_topics": {
-        "val": "polito/smartcampus/RS2/analysis/1"
-      },
-      "location": {
-        "campus": "POLITO",
-        "building": "R",
-        "floor": "0",
-        "room": "RS2"
-      },
-      "last_value": {
-        "room_id": "RS2",
-        "status": "occupied",
-        "hvac_status": "ON",
-        "timestamp": "2025-12-27 15:05:00"
-      }
-    },
-    {
-      "id": "Analysis_R1B",
-      "type": "analysis_result",
-      "resources": [
-        "status",
-        "hvac"
-      ],
-      "mqtt_topics": {
-        "val": "polito/smartcampus/R1B/analysis/1"
-      },
-      "location": {
-        "campus": "POLITO",
-        "building": "R",
-        "floor": "0",
-        "room": "R1B"
-      },
-      "last_value": {
-        "room_id": "R1B",
-        "status": "occupied",
-        "hvac_status": "ON",
-        "timestamp": "2025-12-27 15:01:55"
-      }
-    },
-    {
-      "id": "Analysis_R2B",
-      "type": "analysis_result",
-      "resources": [
-        "status",
-        "hvac"
-      ],
-      "mqtt_topics": {
-        "val": "polito/smartcampus/R2B/analysis/1"
-      },
-      "location": {
-        "campus": "POLITO",
-        "building": "R",
-        "floor": "0",
-        "room": "R2B"
-      },
-      "last_value": {
-        "room_id": "R2B",
-        "status": "occupied",
-        "hvac_status": "ON",
-        "timestamp": "2025-12-27 15:05:05"
       }
     }
   ],

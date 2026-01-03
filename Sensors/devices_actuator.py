@@ -8,33 +8,52 @@ class Acutuator(GenericDevice):
         super().__init__(room, index, sensor_type, "actuator", frequency)
         self.room = room
         self.topics = {
-            "cmd": self.base_topic + "/cmd"
+            "cmd": self.base_topic + "/cmd",
+            "status": self.base_topic + "/status"
         }
         self.frequency = frequency
-    def notify(self, topic, payload):
+
+        self.current_states = {
+            "status": "OFF",
+            "target_temp": 26,
+            "mode": "comfort"
+        }
+    def notify(self, topic, payload, client):
         print(f"[!] Message received on {topic}")
         try:
             command = json.loads(payload)
+            status_changed = False
 
             if "status" in command:
-                sensor_status = command["status"]
-                if sensor_status.upper() == "ON":
+                new_status = command["status"]
+                self.current_states["status"] = new_status
+                status_changed = True
+                if new_status.upper() == "ON":
                     print(f"[+]Room {self.room} Air conditioner turned ON")
                 else:
                     print(f"[-]Room {self.room} Air conditioner turned OFF")
 
             if "target_temp" in command:
-                temp_value = command["target_temp"]
-                print(f"[+]Room {self.room} Setting target temperature to {temp_value}°C")
+                self.current_states["target_temp"] = command["target_temp"]
+                status_changed = True
+                print(f"[+]Room {self.room} Setting target temperature to {self.current_states['target_temp']}°C")
                 
             if "mode" in command:
-                mode_value = command["mode"]
-                print(f"[+]Room {self.room} Setting mode to {mode_value}")
+                self.current_states["mode"] = command["mode"]
+                status_changed = True
+                print(f"[+]Room {self.room} Setting mode to {self.current_states['mode']}")
+            
+            if status_changed:
+                self.publish_status(client)
             
         except json.JSONDecodeError:
 
             print(f">>> Unvalid: {payload}")
+    def publish_status(self, client):
 
+        payload = json.dumps(self.current_states)
+        client.publish(self.topics["status"], payload, retain=True)
+        print(f"[>] Feedback sent to {self.topics['status']}: {payload}")
 
     def start(self):
 
@@ -44,7 +63,7 @@ class Acutuator(GenericDevice):
         client = self.connect_mqtt()
 
         def on_message(client, userdata, msg):
-            self.notify(msg.topic, msg.payload.decode())
+            self.notify(msg.topic, msg.payload.decode(),client)
 
         client.on_message = on_message
 
@@ -52,6 +71,8 @@ class Acutuator(GenericDevice):
         client.subscribe(target_topic)
 
         print(f"[*] Actuator started. Listening on: {self.topics['cmd']}")
+
+        self.publish_status(self.client)
 
         try:
             while True:

@@ -8,7 +8,7 @@ from devices_actuator import Acutuator
 
 current_dir = os.path.dirname(os.path.abspath(__file__))
 project_root = os.path.abspath(os.path.join(current_dir, ".."))
-config_path = os.path.join(project_root, "Catalog", "setting_config.json")
+config_path = os.path.join(project_root, "setting_config.json")
 
 print(f"DEBUG: Loading config from: {config_path}")
 
