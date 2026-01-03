@@ -155,17 +155,7 @@ class Sensor(GenericDevice):
 
                 value = 0
                 if self.sensor_type == "temperature":
-                    month = datetime.datetime.now().month
-                    if month in [11, 12, 1, 2, 3]: 
-                        base = 19.0 # winter
-                    elif month in [6, 7, 8]:       
-                        base = 26.0 # summer
-                    else:                          
-                        base = 22.0 # spring/fall
-
-                    heat_rise = (current_people / self.capacity) * 3.5
-
-                    value = round(base + heat_rise, 2)
+                    value = self.calculate_physics_temp(current_people)
                 else:
                     value = current_people
                 
