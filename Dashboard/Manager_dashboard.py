@@ -1,31 +1,38 @@
 import streamlit as st
-import json
+import requests
 import datetime
-import random
-import os
+
 
 st.set_page_config(
-    page_title="Smart Campus – Manager Dashboard",
+    page_title="Smart Campus - Manager Dashboard",
     layout="wide"
 )
 
 st.markdown('<meta http-equiv="refresh" content="10">', unsafe_allow_html=True)
 
-st.title("Smart Campus – Manager Dashboard")
+st.title("Smart Campus - Manager Dashboard")
 st.subheader("Real-time Room Monitoring & Control")
-
 st.write("Now:", datetime.datetime.now())
 
-BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-CONFIG_PATH = os.path.join(BASE_DIR, "rooms_config.json")
 
-with open(CONFIG_PATH, "r", encoding="utf-8") as f:
-    config = json.load(f)
+CONTROLLER_URL = "http://127.0.0.1:18080/"
 
-rooms = config["rooms"]
+
+try:
+    resp = requests.get(CONTROLLER_URL, timeout=5)
+    resp.raise_for_status()
+    rooms = resp.json()
+except Exception as e:
+    st.error(f"Cannot connect to Controller: {e}")
+    st.stop()
+
+if not isinstance(rooms, list) or len(rooms) == 0:
+    st.warning("No room data available from Controller yet.")
+    st.stop()
+
 
 st.markdown("---")
-st.subheader("Global Temperature Control")
+st.subheader("Global HVAC Control")
 
 mode = st.selectbox(
     "Select HVAC Mode:",
@@ -34,29 +41,49 @@ mode = st.selectbox(
 
 if st.button("Apply Mode"):
     st.success(f"Manager command sent: **{mode} mode**")
-    st.caption("Command forwarded to control layer via MQTT (logical flow).")
+    st.caption("Command would be forwarded to Controller (future work).")
 
 
 st.markdown("---")
 st.subheader("Real-time Room Status")
 
 for r in rooms:
-    capacity = r["capacity"]
+    room_id = r.get("room_id", "-")
+    capacity = r.get("capacity", 0)
+    students = r.get("students")
+    temperature = r.get("temperature")
+    available = r.get("available")
 
-    people = random.randint(0, capacity)
-    temperature = round(random.uniform(19.0, 26.0), 1)
-    occupancy_rate = people / capacity if capacity else 0
+    occupancy_rate = (
+        students / capacity if students is not None and capacity else 0
+    )
 
     col1, col2, col3, col4, col5 = st.columns([2, 2, 4, 2, 2])
 
-    col1.write(f"**Room**: {r['room_id']}")
-    col2.write(f"👥 {people} / {capacity}")
-    col3.progress(occupancy_rate)
-    col4.write(f"{occupancy_rate*100:.1f}%")
-    col5.write(f"{temperature} °C")
+    col1.markdown(f"**Room {room_id}**")
+
+    if students is None:
+        col2.markdown("👥 N/A")
+        col3.progress(0.0)
+        col4.markdown("N/A")
+    else:
+        col2.markdown(f"👥 {students} / {capacity}")
+        col3.progress(min(occupancy_rate, 1.0))
+        col4.markdown(f"{occupancy_rate*100:.1f}%")
+
+    if temperature is None:
+        col5.markdown("🌡 N/A")
+    else:
+        col5.markdown(f"🌡 {temperature} °C")
+
+    if available:
+        st.markdown("🟢 **Available**")
+    else:
+        st.markdown("🔴 **Occupied / Not available**")
+
+    st.divider()
 
 st.caption(
-    "Live dynamic data (mock). "
-    "Occupancy & temperature updated every 10 seconds. "
-    "Control logic handled by backend services."
+    "Live data from Controller (rooms_info). "
+    "Auto-refresh every 10 seconds."
 )
