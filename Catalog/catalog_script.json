@@ -541,6 +541,78 @@
         "floor": "1",
         "room": "RS2"
       }
+    },
+    {
+      "id": "test_temperature_sensor_99",
+      "type": "temperature",
+      "resources": [
+        "val"
+      ],
+      "mqtt_topics": {
+        "val": "polito/smartcampus/test/temperature/99/value"
+      },
+      "update_interval": 10,
+      "location": {
+        "campus": "Unknown",
+        "building": "Unknown",
+        "floor": "0",
+        "room": "test"
+      }
+    },
+    {
+      "id": "test_temperature_actuator_99",
+      "type": "temperature",
+      "resources": [
+        "cmd",
+        "status"
+      ],
+      "mqtt_topics": {
+        "cmd": "polito/smartcampus/test/temperature/99/cmd",
+        "status": "polito/smartcampus/test/temperature/99/status"
+      },
+      "update_interval": null,
+      "location": {
+        "campus": "Unknown",
+        "building": "Unknown",
+        "floor": "0",
+        "room": "test"
+      }
+    },
+    {
+      "id": "tesr_temperature_sensor_99",
+      "type": "temperature",
+      "resources": [
+        "val"
+      ],
+      "mqtt_topics": {
+        "val": "polito/smartcampus/tesr/temperature/99/value"
+      },
+      "update_interval": 10,
+      "location": {
+        "campus": "Unknown",
+        "building": "Unknown",
+        "floor": "0",
+        "room": "tesr"
+      }
+    },
+    {
+      "id": "tesr_temperature_actuator_99",
+      "type": "temperature",
+      "resources": [
+        "cmd",
+        "status"
+      ],
+      "mqtt_topics": {
+        "cmd": "polito/smartcampus/tesr/temperature/99/cmd",
+        "status": "polito/smartcampus/tesr/temperature/99/status"
+      },
+      "update_interval": null,
+      "location": {
+        "campus": "Unknown",
+        "building": "Unknown",
+        "floor": "0",
+        "room": "tesr"
+      }
     }
   ],
   "users": [

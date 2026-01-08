@@ -6,7 +6,7 @@ sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")
 from Catalog.config_loader import RoomConfigLoader
 
 class GenericDevice:
-    def __init__(self, room, index, sensor_type, role, frequency):
+    def __init__(self, room="R1", index=1, sensor_type="unknown", role="unknown", frequency=10):
 
         self.room = room
         self.index = index
@@ -24,7 +24,21 @@ class GenericDevice:
         loader = RoomConfigLoader("setting_config.json")
         cata_info = loader.get_catalog_info()
         self.catalog_url = f"http://{cata_info['host']}:{cata_info['port']}{cata_info['api_path']}"
-        self.location = loader.get_room_config(room)["location"]
+
+        # fexible location assignment
+        try:
+            room_config = loader.get_room_config(self.room)
+            if self.room:
+                self.location = room_config.get("location")
+            else:
+                raise ValueError("Room ID not found in configuration.")
+        except Exception:
+            self.location = {
+                "campus": "Unknown",
+                "building": "Unknown",
+                "floor": "0",
+                "room": room
+                }
 
         if not self._discover_services():
             raise ConnectionError("CRITICAL: Failed to discover MQTT Broker from Catalog!")
@@ -67,7 +81,7 @@ class GenericDevice:
         
         payload = {
             "id": self.device_id,
-            "type": self.sensor_type,  # 记住：Catalog 只要 "temperature" 或 "wifi"
+            "type": self.sensor_type,
             "resources": list(specific_topics.keys()),
             "mqtt_topics": specific_topics,
             "update_interval": self.frequency,
@@ -90,7 +104,6 @@ class GenericDevice:
             return False
 
     def connect_mqtt(self):
-        # 通用的 MQTT 连接逻辑
         self.client = mqtt.Client(client_id=self.device_id)
         print(f"[*] Connecting to Broker: {self.broker}...")
         try:

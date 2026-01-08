@@ -26,6 +26,9 @@ class Controller:
                  catalog_host: str = "127.0.0.1",
                  catalog_port: int = 8080,
                  catalog_api_path: str = "/api") -> None:
+        # ==========================================
+        # 这里base_topic_prefix后续似乎没有用到？需要保留吗 -- Mya
+        # ==========================================
         self.base_topic_prefix = "polito/smartcampus"
 
         self.mqtt_host =mqtt_host
@@ -351,6 +354,9 @@ class RestAPI:
     
     
 def main():
+    # ==========================================
+    # 这里建议不用硬编码 localhost 和端口，改成从环境变量读，方便部署和测试 -- Mya
+    # ==========================================
     controller = Controller(
         mqtt_host="test.mosquitto.org",
         mqtt_port=1883,
