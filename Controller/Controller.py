@@ -280,12 +280,13 @@ class Controller:
         last_sent_at = room_state.get("last_cmd_sent_at")
         last_decision = room_state["last_cmd_sent_on"]
         should_on = room_state.get("should_on")
-        MIN_INTERVAL = 30
-        if last_sent_at is None:
-            return True
-        if last_decision == should_on or should_on is None:
-            return False
-        return(decided_at-last_sent_at)>=MIN_INTERVAL
+        # MIN_INTERVAL = 15
+        # if last_sent_at is None:
+        #     return True
+        # if last_decision == should_on or should_on is None:
+        #     return False
+        # return(decided_at-last_sent_at)>=MIN_INTERVAL
+        return True
 
     def apply_ac_decisions(self,ac_decision_by_room: dict, ac_state_by_room: dict):  
         """
@@ -334,6 +335,10 @@ class Controller:
 
                     request_timestamp = datetime.now(timezone.utc).timestamp()
                     snapshot = self.get_snapshot()
+
+                    #检查是否传了test房间
+                    test_like = [k for k in snapshot.keys() if "tes" in k.lower()]
+                    print(f"[SNAPSHOT] test-like rooms={test_like}")
 
                     if snapshot:
                         ac_decision_by_room = OccupancyAnalyzer.deciede_ac_from_room_info(request_timestamp,snapshot)

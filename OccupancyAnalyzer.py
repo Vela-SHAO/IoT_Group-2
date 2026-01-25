@@ -268,6 +268,24 @@ def get_student_dashboard_response(timestamp,snapshot = None):
 
     room_info_path ="setting_config.json"
     rooms_info= get_room_info(room_info_path)
+
+    # 现有房间集合
+    existing = set()
+    for r in rooms_info:
+        rid = r.get("room_id")
+        if rid:
+            existing.add(rid)
+
+    # 把 snapshot 里出现但不在 setting_config 的房间也加入，给默认 capacity
+    if snapshot is not None:
+        for rid in snapshot.keys():
+            if rid not in existing:
+                rooms_info.append({
+                    "room_id": rid,
+                    "capacity": 30
+                })
+                existing.add(rid)
+
     random.seed(42)
     for room in rooms_info:
         fill_from_snapshot_or_simulate(room, request_month, available_rooms_list, snapshot)
