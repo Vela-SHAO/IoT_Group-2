@@ -89,7 +89,6 @@ class GenericDevice:
         }
 
         try:
-            # 发送请求
             res = requests.post(device_url, json=payload)
             if res.status_code in [200, 201]:
                 print(f"[+] Registered: {self.device_id}")

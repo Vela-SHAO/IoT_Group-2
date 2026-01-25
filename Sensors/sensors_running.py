@@ -42,7 +42,7 @@ def load_rooms():
 
 
 def run_sensor(room_id, device_index, device_type):
-    freq = 30 if device_type == "temperature" else 10
+    freq = 5
     sensor = Sensor(room=room_id, index=device_index, sensor_type=device_type, frequency=freq, loader_instance=loader)
     sensor.start()
 

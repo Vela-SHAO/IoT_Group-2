@@ -5,6 +5,8 @@ from devices_base import GenericDevice
 
 class Acutuator(GenericDevice):
     def __init__(self, room, index, sensor_type, frequency=None):
+        if frequency is None:
+            frequency = 5
         super().__init__(room, index, sensor_type, "actuator", frequency)
         self.room = room
         self.topics = {

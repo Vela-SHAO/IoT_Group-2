@@ -12,74 +12,28 @@ current_dir = os.path.dirname(os.path.abspath(__file__))
 project_root = os.path.abspath(os.path.join(current_dir, ".."))
 config_path = os.path.join(project_root, "setting_config.json")
 
-# ==========================================
-# 子类 1: Sensor (传感器)
-# 职责：注册 -> 连接 -> 循环生成数据 -> 发布
-# ==========================================
+
 class Sensor(GenericDevice):
-    def __init__(self, room, index, sensor_type, frequency=10, loader_instance=None):
+    def __init__(self, room, index, sensor_type, frequency=None, loader_instance=None):
+
         if frequency is None:
-            frequency = 10 if sensor_type == "wifi" else 30
+            frequency = 5
 
         super().__init__(room, index, sensor_type, "sensor", frequency)
         self.topics = {"val": self.base_topic + "/value"}
 
-        # about wifi people count part
+        # about wifi people count part and control people movement simulation
         loader = loader_instance if loader_instance else RoomConfigLoader(config_path)
         try:
             self.capacity = loader.get_room_config(target_room_id=self.room)["meta"].get("capabilities", 30)
         except:
             self.capacity = 30
         self.people_count = random.randint(int(self.capacity * 0.1), int(self.capacity * 0.5))
-        self.last_wifi_update_time = 0 # last time when people count was updated
-        self.wifi_interval = 60 # seconds for people count interval
-
-        # about temperature part
+        self.last_wifi_update_time = time.time()
+        self.wifi_interval = 30
         self.current_temp = 22.0
-        self.ac_status = "OFF"
-        self.ac_mode = "auto"
-        self.ac_target_temp = 24.0
 
-        # sensor will look for its corresponding actuator topic (just for simulate the real scenario)
-        self.target_actuator_topic = None
-
-        print(f"[{sensor_type}] Init: {self.room}, Max: {self.capacity}, Start People: {self.people_count}")
-
-    def _lookup_actuator_topic(self):
-        if self.sensor_type != "temperature":
-            return None
-        
-        search_url = f"{self.catalog_url}/devices"
-
-        try:
-            res = requests.get(search_url, params={"room": self.room})
-            if res.status_code == 200:
-                devices = res.json()
-                for dev in devices:
-                    if dev["id"] == self.device_id: continue
-                    
-                    mqtt_topics = dev.get("mqtt_topics", {})
-                    if "status" in mqtt_topics:
-                        found = mqtt_topics["status"]
-                        print(f"    -> Found Actuator Topic: {found}")
-                        return found
-            
-            return None
-            
-        except Exception as e:
-            print(f"   [-] Actuator lookup failed: {e}")
-            return None
-        
-    def on_actuator_message(self, client, userdata, msg):
-        try:
-            payload = json.loads(msg.payload)
-            if "status" in payload:
-                self.ac_status = payload["status"]
-
-            if "target_temp" in payload:
-                self.ac_target_temp = float(payload["target_temp"])
-        except:
-            pass
+        print(f"[{sensor_type}] Init: {self.room}, Max: {self.capacity}, Start People: {self.people_count}, Start Temp: {self.current_temp} C")
 
         
     def _simulate_people_movement(self):
@@ -98,28 +52,24 @@ class Sensor(GenericDevice):
         
         month = datetime.datetime.now().month
         if month in [11, 12, 1, 2, 3]: 
-            base_outdoor = 10.0 
+            base_temp = 18.0 
         elif month in [6, 7, 8]:       
-            base_outdoor = 30.0
+            base_temp = 28.0
         else:                          
-            base_outdoor = 22.0
+            base_temp = 22.0
 
-        heat_from_people = (current_people / self.capacity) * 5.0
-        natural_target = (base_outdoor + heat_from_people)
+        heat_from_people = (current_people / self.capacity) * 8.0
+        final_target_temp = base_temp + heat_from_people
 
-        final_target_temp = natural_target
-
-        if self.ac_status == "ON":
-            final_target_temp = self.ac_target_temp
-
-        step = 0.3
-
+        step = 0.1
         if self.current_temp < final_target_temp:
-            change = min(step, final_target_temp - self.current_temp)
-            self.current_temp += change
+            self.current_temp += step
+            if self.current_temp > final_target_temp:
+                self.current_temp = final_target_temp
         elif self.current_temp > final_target_temp:
-            change = min(step, self.current_temp - final_target_temp)
-            self.current_temp -= change
+            self.current_temp -= step
+            if self.current_temp < final_target_temp:
+                self.current_temp = final_target_temp
         
         return round(self.current_temp, 2)
 
@@ -127,69 +77,44 @@ class Sensor(GenericDevice):
 
         if not self.register_to_catalog(self.topics):
             return False
-        
-        if self.sensor_type == "temperature":
-            print(f"[*] Looking up actuator for room {self.room}...")
-            while self.target_actuator_topic is None:
-                self.target_actuator_topic = self._lookup_actuator_topic()
-                if self.target_actuator_topic is None:
-                    print("    [-] Actuator not found, retrying in 2s...")
-                    time.sleep(2)
-
         client = self.connect_mqtt()
+        if not client:
+            print("Error: MQTT Connection failed.")
+            return False
         
-        if client is None:
-            print("Error: MQTT Connection failed. (client is None)")
-            return
-
-        print(f"[*] Sensor started. Publishing to: {self.topics['val']}")
-
-        if self.sensor_type == "temperature" and self.target_actuator_topic:
-            client.subscribe(self.target_actuator_topic)
-            client.message_callback_add(self.target_actuator_topic, self.on_actuator_message)
-            print(f"[*] Subscribed to Actuator Topic: {self.target_actuator_topic}")
-
-        last_reported_people = -1
-
         try:
             while True:
                 current_time = time.time()
-                playload = {}
+                payload = {}
 
+                if current_time - self.last_wifi_update_time >= self.wifi_interval:
+                    self.people_count = self._simulate_people_movement()
+                    self.last_wifi_update_time = current_time
+                
                 if self.sensor_type == "wifi":
-                    if current_time - self.last_wifi_update_time >= self.wifi_interval:
-                        current_people = self._simulate_people_movement()
-                        self.last_wifi_update_time = current_time
-                        print(f"   [Simulation] Room {self.room} People Updated: {current_people}")
-                        last_reported_people = current_people
-                    else:
-                        current_people = self.people_count
                     payload = {
                         "id": self.device_id,
-                        "v": current_people,
+                        "v": self.people_count,
                         "u": "count",
                         "t": time.time()
                     }
-                    print(f"--> {self.room} [WiFi] People: {current_people}")
-
+                    print(f"[wifi] {self.room} People: {self.people_count}")
                 elif self.sensor_type == "temperature":
-                    if current_time - self.last_wifi_update_time >= self.wifi_interval:
-                        self._simulate_people_movement()
-                        self.last_wifi_update_time = current_time
-
-                    current_temp = self.calculate_physics_temp(self.people_count)
-
+                    temp_val = self.calculate_physics_temp(self.people_count)
                     payload = {
                         "id": self.device_id,
-                        "v": current_temp,
+                        "v": temp_val,
                         "u": "C",
                         "t": time.time()
                     }
+                    print(f"[temp] {self.room} Temperature: {temp_val} C")
+                
                 if payload:
-                    client.publish(self.topics['val'], json.dumps(payload))
-                    
+                    client.publish(self.topics["val"], json.dumps(payload))
+                
                 time.sleep(self.frequency)
 
+            
         except KeyboardInterrupt:
             client.loop_stop()
             print("Sensor Stopped")

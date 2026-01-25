@@ -23,7 +23,7 @@ def load_rooms():
 
 
 def run_actuator(room_id, device_index, device_type):
-    freq = 30 if device_type == "temperature" else 10
+    freq = 5
     actuator = Acutuator(room=room_id, index=device_index, sensor_type=device_type, frequency=freq)
     actuator.start()
 

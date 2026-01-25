@@ -85,54 +85,84 @@ class Controller:
         return [data]
 
     def refresh_topics_from_catalog(self):
-        """
-        从 Catalog 建三张表：
-        - wifi sensors: mqtt_topics["val"] 作为 people 订阅 topic
-        - temperature sensors: mqtt_topics["val"] 作为 temperature 订阅 topic
-        - temperature actuators: mqtt_topics["cmd"] 作为 cmd 发布 topic
-        """
-        devices = self._catalog_get_devices()  
-        
+        print("\n[Debug] --- Starting Catalog Refresh ---")
+        try:
+            # 获取设备列表
+            devices = self._catalog_get_devices()
+            print(f"[Debug] Raw devices list length: {len(devices)}")
+        except Exception as e:
+            print(f"[Catalog] Sync failed: {e}")
+            return
 
         people_map = {}
         temp_val_map = {}
         temp_cmd_map = {}
 
         for dev in devices:
+            # 1. 获取基础信息
             dev_type = dev.get("type")
-            dev_id = dev.get("id", "")
-            room_id = dev.get("location", {}).get("room")
+            dev_id = dev.get("id", "UNKNOWN")
             mqtt_topics = dev.get("mqtt_topics", {})
+            
+            # 2. 解析 Location (兼容性处理)
+            loc = dev.get("location")
+            if isinstance(loc, dict):
+                room_id = loc.get("room")
+            elif isinstance(loc, str):
+                room_id = loc
+            else:
+                room_id = None
+            
+            # 调试打印：看看这个设备到底长啥样
+            # print(f"  > Checking Dev: {dev_id} | Type: {dev_type} | Room: {room_id}")
 
             if not room_id:
+                # print(f"    ❌ Skipped: No room_id found (loc={loc})")
                 continue
 
-            # wifi sensor -> people value topic
+            # ==================================================
+            # 3. 匹配逻辑 (逻辑修复)
+            # ==================================================
+            
+            is_matched = False
+
+            # [逻辑 A] WiFi Sensor
+            # 只要 type 是 wifi 且有 value topic 就行
             if dev_type == "wifi" and "val" in mqtt_topics:
                 people_map[room_id] = mqtt_topics["val"]
+                self.mqtt_client.subscribe(mqtt_topics["val"])
+                is_matched = True
+                print(f"    ✅ Accepted [WiFi] for Room {room_id}")
 
-            # temperature sensor -> temperature value topic
-            if dev_type == "temperature" and dev_id.endswith("_sensor_1") and "val" in mqtt_topics:
+            # [逻辑 B] Temperature Sensor
+            # 只要 type 是 temperature，ID 里包含 "sensor"，且有 value topic 就行
+            # 注意：把 .lower() 加进去，防止大小写敏感导致匹配失败
+            if dev_type == "temperature" and "sensor" in dev_id.lower() and "val" in mqtt_topics:
                 temp_val_map[room_id] = mqtt_topics["val"]
+                self.mqtt_client.subscribe(mqtt_topics["val"])
+                is_matched = True
+                print(f"    ✅ Accepted [Temp Sensor] for Room {room_id}")
 
-            # temperature actuator -> cmd topic
-            if dev_type == "temperature" and dev_id.endswith("_actuator_1") and "cmd" in mqtt_topics:
+            # [逻辑 C] Temperature Actuator
+            if dev_type == "temperature" and "actuator" in dev_id.lower() and "cmd" in mqtt_topics:
                 temp_cmd_map[room_id] = mqtt_topics["cmd"]
+                is_matched = True
+                print(f"    ✅ Accepted [Actuator] for Room {room_id}")
 
+            if not is_matched:
+                # 如果没被上面任何一个 if 捕获，打印原因
+                print(f"    ⚠️ Rejected: {dev_id} (Type: {dev_type}, Topics: {list(mqtt_topics.keys())})")
+
+        # 更新内存
         self.people_value_topic_by_room = people_map
         self.temperature_value_topic_by_room = temp_val_map
         self.temperature_cmd_topic_by_room = temp_cmd_map
 
-        print("[Catalog] topics loaded:")
-        print("  wifi(value) rooms:", sorted(self.people_value_topic_by_room.keys()))
-        print("  temp(value) rooms:", sorted(self.temperature_value_topic_by_room.keys()))
-        print("  temp(cmd)   rooms:", sorted(self.temperature_cmd_topic_by_room.keys()))
+        print(f"[Debug] Refresh Done. Active Temp Rooms: {list(self.temperature_value_topic_by_room.keys())}")
+        print("[Debug] ----------------------------------\n")
 
+        
     def _parse_topic(self, topic: str):
-            """
-            topic 格式：{base_topic_prefix}/{room_id}/{device_type}/{index_number}
-            返回 (room_id, device_type, index_number)，解析失败返回 None
-            """
             parts = topic.split("/")
             if len(parts) < 4:
                 return None
@@ -175,16 +205,16 @@ class Controller:
     def _on_mqtt_message(self,client,userdata,msg):
         parsed = self._parse_topic(msg.topic)
 
-
         if parsed is None:
-            return
-        room_id,device_type, index_number =parsed
-        #print(f"[MQTT] parsed room_id type={type(room_id)} value={room_id}")
+            print(f"[MQTT] Topic parsed failed: {msg.topic}")
+        room_id,device_type, index_number = parsed
+
         try :
             payload_text =msg.payload.decode("utf-8")
             payload_data = json.loads(payload_text)
-            # print(f"[MQTT] {msg.topic} -> {payload_data}")
-        except Exception:
+            print(f"[Data]Room:{room_id}|Type:{device_type}|Val:{payload_data.get('v')}")
+        except Exception as e:
+            print(f"[MQTT] Payload decode error: {e}")
             return
         
         sensor_id = payload_data.get("id")
@@ -290,27 +320,30 @@ class Controller:
             print(f"{room_id} HVAC open {state['last_cmd_sent_on']} at {datetime.fromtimestamp(state['last_cmd_sent_at'])}")
 
     def start_decision_loop(self, interval_seconds: float = 5.0):
-        """
-        每隔 interval_seconds:
-        - 取一次 snapshot
-        - 交给 OccupancyAnalyzer 算“是否建议开空调”
-        - 调用 apply_ac_decisions -> 触发 publish cmd
-        """
         if self._decision_thread is not None:
             return  # 防止重复启动
-
+    
         def loop():
+            counter = 0
             while not self._stop_event.is_set():
                 try:
+                    if counter % 6 == 0:
+                        print("[DecisionLoop] refreshing topics from Catalog...")
+                        self.refresh_topics_from_catalog()
+                    counter += 1
+
                     request_timestamp = datetime.now(timezone.utc).timestamp()
                     snapshot = self.get_snapshot()
-                    ac_decision_by_room = OccupancyAnalyzer.deciede_ac_from_room_info(request_timestamp,snapshot)
-                    self.apply_ac_decisions(ac_decision_by_room, self.ac_state_by_room)
-                    print("[cmd]in the loop")
+
+                    if snapshot:
+                        ac_decision_by_room = OccupancyAnalyzer.deciede_ac_from_room_info(request_timestamp,snapshot)
+                        self.apply_ac_decisions(ac_decision_by_room, self.ac_state_by_room)
+                    print(f"[Loop] Cycle check done. (Time: {datetime.now().strftime('%H:%M:%S')})")
+
                 except Exception as e:
                     import traceback
                     print(f"[DecisionLoop] error: {e}")
-                    traceback.print_exc()
+                    # traceback.print_exc()
 
                 time.sleep(interval_seconds)
 
@@ -319,11 +352,6 @@ class Controller:
     
     def stop(self):
         self._stop_event.set()
-
-
-
-
-
 
 
 
@@ -345,7 +373,7 @@ class RestAPI:
             return json.dumps(snapshot, ensure_ascii=False).encode("utf-8")
         
 
-        #之后把数据处理的参数改为2个，snapshot和request_timestamp
+
         result_list = OccupancyAnalyzer.get_student_dashboard_response(request_timestamp,snapshot)
 
         cherrypy.response.headers["Content-Type"] = "application/json; charset=utf-8"
