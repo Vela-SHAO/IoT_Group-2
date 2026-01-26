@@ -623,9 +623,17 @@
     }
   ],
   "services": [
-    {
-      "id": "service_thingspeak",
-      "description": "Thingspeak Adaptor"
+  {
+    "id": "service_thingspeak",
+    "description": "Thingspeak Adaptor"
+  },
+  {
+    "id": "service_dashboard",
+    "description": "Smart Campus Dashboards",
+    "endpoint": {
+      "student": "http://127.0.0.1:8501",
+      "manager": "http://127.0.0.1:8502"
     }
-  ]
+  }
+ ]
 }
