@@ -543,59 +543,6 @@
       }
     },
     {
-      "id": "test_temperature_sensor_2",
-      "type": "temperature",
-      "resources": [
-        "val"
-      ],
-      "mqtt_topics": {
-        "val": "polito/smartcampus/test/temperature/2/value"
-      },
-      "update_interval": 5,
-      "location": {
-        "campus": "Unknown",
-        "building": "Unknown",
-        "floor": "0",
-        "room": "test"
-      }
-    },
-    {
-      "id": "test_temperature_actuator_2",
-      "type": "temperature",
-      "resources": [
-        "cmd",
-        "status"
-      ],
-      "mqtt_topics": {
-        "cmd": "polito/smartcampus/test/temperature/2/cmd",
-        "status": "polito/smartcampus/test/temperature/2/status"
-      },
-      "update_interval": 5,
-      "location": {
-        "campus": "Unknown",
-        "building": "Unknown",
-        "floor": "0",
-        "room": "test"
-      }
-    },
-    {
-      "id": "test_wifi_sensor_2",
-      "type": "wifi",
-      "resources": [
-        "val"
-      ],
-      "mqtt_topics": {
-        "val": "polito/smartcampus/test/wifi/2/value"
-      },
-      "update_interval": 5,
-      "location": {
-        "campus": "Unknown",
-        "building": "Unknown",
-        "floor": "0",
-        "room": "test"
-      }
-    },
-    {
       "id": "test1_temperature_sensor_2",
       "type": "temperature",
       "resources": [

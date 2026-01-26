@@ -140,7 +140,7 @@ class DevicesAPI:
                     return {"message": "Deleted", "id": device_id}
             
             elif len(params) > 0:
-                valid_keys = ["id", "room", "type"]
+                valid_keys = ["room", "type","role","index"]
                 if not any (k in params for k in valid_keys):
                     raise cherrypy.HTTPError(400, "No valid deletion criteria provided")
                 
@@ -152,6 +152,8 @@ class DevicesAPI:
 
                         id_room = parts[0]
                         id_type = parts[1]
+                        id_role = parts[2]
+                        id_index = parts[3]
                     except:
                         new_list.append(d)
                         continue
@@ -161,7 +163,9 @@ class DevicesAPI:
                         should_delete = False
                     if 'type' in params and id_type != params['type']:
                         should_delete = False
-                    if 'id' in params and device_id != params['id']:
+                    if 'role' in params and id_role != params['role']:
+                        should_delete = False
+                    if 'index' in params and id_index != params['index']:
                         should_delete = False
                     
                     if should_delete:

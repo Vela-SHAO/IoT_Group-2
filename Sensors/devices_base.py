@@ -6,7 +6,7 @@ sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")
 from Catalog.config_loader import RoomConfigLoader
 
 class GenericDevice:
-    def __init__(self, room="R1", index=1, sensor_type="unknown", role="unknown", frequency=5):
+    def __init__(self, room="unknown", index=None, sensor_type="unknown", role="unknown", frequency=5):
 
         self.room = room
         self.index = index
@@ -135,22 +135,53 @@ class GenericDevice:
     
     def delete_from_catalog(self):
         
-        print(f"[*] Deleting {self.device_id} from Catalog...")
-        device_url = f"{self.catalog_url}/devices/{self.device_id}"
+        device_url = f"{self.catalog_url}/devices"
 
-        try:
-            res = requests.delete(device_url)
-            if res.status_code == 200:
-                print(f"[+] Deleted: {self.device_id}")
-                return True
-            else:
-                print(f"[-] Catalog Refused!")
-                print(f"Status Code: {res.status_code}")
-                print(f"Response Text: {res.text}")
+        if self.room != "unknown" and self.sensor_type != "unknown" and self.index is not None:
+            device_url = f"{device_url}/{self.device_id}"
+            print(f"[*] Deleting {self.device_id} from Catalog...")
+            try:
+                res = requests.delete(device_url)
+                if res.status_code == 200:
+                    print(f"[+] Deleted: {self.device_id}")
+                    return True
+                else:
+                    print(f"[-] Catalog Refused!")
+                    print(f"Status Code: {res.status_code}")
+                    print(f"Response Text: {res.text}")
+                    return False
+            except Exception as e:
+                print(f"[-] Connection Error: {e}")
                 return False
-        except Exception as e:
-            print(f"[-] Connection Error: {e}")
-            return False                    
+        else:
+            params = {}
+            if self.room != "unknown":
+                params["room"] = self.room
+            if self.sensor_type != "unknown":
+                params["type"] = self.sensor_type
+            if self.index is not None:
+                params["index"] = self.index
+
+            if not params:
+                print("[-] Deletion criteria insufficient. Provide at least room, type, or index.")
+                return False
+    
+            try:
+                res = requests.delete(device_url, params=params)
+                if res.status_code == 200:
+                    print(f"[+] Deleted devices matching criteria.")
+                    return True
+                elif res.status_code == 404:
+                    print(f"[-] No devices found matching criteria.")
+                    return False
+                else:
+                    print(f"[-] Catalog Refused!")
+                    print(f"Status Code: {res.status_code}")
+                    print(f"Response Text: {res.text}")
+                    return False
+            except Exception as e:
+                print(f"[-] Connection Error: {e}")
+                return False              
 
     def connect_mqtt(self):
         self.client = mqtt.Client(client_id=self.device_id)

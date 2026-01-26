@@ -1,141 +1,81 @@
 # IoT_Group-2
-项目结构
+1. Project structure:
 ========
-├── Catalog/                  # [服务端] 核心管理模块
-│   ├── Catalog_manage.py     # 主程序：REST API 服务，负责设备注册与服务发现
-│   ├── config_loader.py      # 工具类：负责读取 JSON 配置文件
-│   ├── setting_config.json   # [配置文件] 系统启动的“基准配置” (Bootstrap Config)
-│   └── catalog_script.json   # [数据库] 持久化存储已注册的设备列表
+├── Catalog/                  # Catalog
+│   ├── Catalog_manage.py     # Main script, for managing device registration and service discovery
+│   ├── config_loader.py      # Utility class: responsible for reading JSON configuration files
+│   └── catalog_script.json   # [Database] Persistent storage of registered device list
 │
-└── Sensors/                  # [设备端] 模拟器模块
-    ├── devices_base.py       # [核心父类] 定义了所有设备的通用行为 (GenericDevice)
-    ├── devices_sensor.py     # [子类] 传感器逻辑 (温度、Wifi人数)，包含数据生成算法
-    ├── devices_actuator.py   # [子类] 执行器逻辑 (空调、开关)，负责监听指令
-    ├── sensors_running.py    # [启动脚本] 多线程启动全楼栋的传感器
-    └── actuators_running.py  # [启动脚本] 多线程启动全楼栋的执行器
+└── Sensors/                  # [Device side] Simulator module
+|   ├── devices_base.py       # [Core parent class] Defines common behavior for all devices (GenericDevice)
+|   ├── devices_sensor.py     # [Subclass] Sensor logic (temperature, Wifi), includes data generation algorithms
+|   ├── devices_actuator.py   # [Subclass] Actuator logic (AC switch), responsible for listening to commands and publishing status
+|   ├── sensors_running.py    # [Startup script] Multithreaded launch of sensors for the entire building
+|   └── actuators_running.py  # [Startup script] Multithreaded launch of actuators for the entire building
+|
+└── Add/Delete/               # [Add of delete side] Simulator module
+│   ├── actuator_add.py       # add actuator
+│   ├── device_delete.py      # delete device
+│   └── sensor_add.py         # add sensor
+│   └── wifi_sensor_add.py.   # add wifi sensor when new device is running
 
-2. 🏗 System Architecture (系统架构)
-我们的架构遵循 LinkSmart 标准，采用了 “Bootstrapping (自举) -> Discovery (发现) -> Operation (运行)” 的三步走模式。
+2. HOW TO RUN 
+Strict Order Required: Catalog → Sensors → Actuators.
 
-🔄 核心流程
-Bootstrapping (自举):
+    1. Start Catalog (Infrastructure)
+        Must run first to enable Service Discovery.
 
-    设备启动时，只读取本地的 setting_config.json。
+        python Catalog/Catalog_manage.py
+        Verify: Check http://127.0.0.1:8080.
 
-    此时设备不知道 MQTT Broker 的地址，它只知道 Catalog 的 HTTP 地址。
+    2. Start Sensors (Data Publishers)
+        Opens a new terminal.
+        python Sensors/sensors_running.py
+        Behavior: Devices auto-register and immediately start streaming data (--> Sent logs).
 
-Service Discovery (服务发现):
+    3. Start Actuators (Command Listeners)
+        Opens a new terminal.
+        python Sensors/actuators_running.py
+        Behavior: Devices auto-register, publish initial status, and enter listening mode ([*] Controller started...) to await /cmd.
 
-    设备向 Catalog 发送 HTTP GET 请求 (/api/services)。
+    4. Dynamic Management
+        Run CLI tools to add/remove devices at runtime without restarting the system.
 
-    Catalog 返回 MQTT Broker 的 IP、端口，以及一个 Topic Template (主题模板)。
+        python Add/Delete/sensor_add.py
+        # or python Add/Delete/actuator_add.py
+        # or python Add/Delete/wifi_sensor_add.py
+        # or python Add/Delete/device_delete.py
 
-    (Topic 格式由服务端统一制定，设备负责填空。例如 Catalog 给定 {base}/{room}/{type}/{id}，设备自动填入 polito/R1/temp/1。)
+        Usage: Follow the prompts (Room/Type/Role/Index). Press Enter to use wildcards.
+        Effect: Instantly updates the Catalog Registry and Controller logic.
 
-Registration (注册):
+3. System Explanation
+Our architecture follows the LinkSmart standards, adopting a three-step model: "Bootstrapping -> Discovery -> Operation".
 
-    设备携带自己的 ID、Topic、位置信息 (Location)，向 Catalog 发送 POST 请求进行注册。
+    1. Bootstrapping: Devices boot using only the local setting_config.json to find the Catalog URL.
 
-MQTT Operation (通信):
+    2. Service Discovery: Devices query the Catalog (GET /api/services) to retrieve the MQTT Broker address and Topic Template.
 
-    Sensors: 连接 Broker，开始周期性发布数据 (Publish)。
+    3. Registration: Devices auto-fill the topic template (e.g., polito/R1/temp/1) and register metadata via POST.
 
-    Actuators: 连接 Broker，订阅特定指令频道 (Subscribe)，进入监听模式。
+    4. Operation:
 
-3. 🧠 Simulation Logic (模拟逻辑)
-为了让模拟数据更贴近真实世界，我们摒弃了纯随机生成，采用了以下算法：
+        Sensors: Connect to MQTT and publish data periodically.
 
-🌡️ Sensors (数据生成)
-    机制: State Memory (状态记忆) + Random Walk (随机游走)。
+        Actuators: Subscribe to .../cmd for control and publish to .../status for feedback.
+   
 
-    原理: 下一刻的数值是基于当前数值进行微调，而不是重新生成。
+4. Logic & Simulation
+    1. Sensor Algorithms:
 
-    温度: 平滑波动，带回归力（防止温度无限升高或降低）。
+        Wi-Fi (People Count): Uses a Random Walk algorithm (previous value ± random fluctuation) constrained by room capacity to simulate realistic crowd flow.
 
-    人数: 模拟人群流动（进出 -2 ~ +2 人），并受限于房间的 Capacity（最大容量），不会出现负数或超员。
+        Temperature: Calculated as Seasonal Base + Heat Effect (driven by current people count).
 
-🎮 Actuators (指令响应)
-机制: Multi-threading Listening (多线程监听)。
+    2. Multi-threading: sensors_running.py and actuators_running.py spawn concurrent threads for each room to simulate a distributed environment.
 
-    原理: 每个执行器（如 R1 的空调）都在独立的线程中运行一个 MQTT Client 循环。
-
-    通信:
-
-    订阅: .../cmd (接收控制指令，如 {"status": "ON"})
-
-    反馈: 控制台会打印接收到的指令及执行动作。
-
-🏃 Runners (多线程启动器)
-    sensors_running.py 和 actuators_running.py 是系统的上帝视角脚本。
-
-    它们读取房间列表，为每个房间自动创建对应的传感器和执行器实例，并使用 threading 模块并发运行，模拟真实的分布式物联网环境。
-
-4. 🚀 How to Run (运行指南)
-请按照以下顺序启动系统，以保证服务发现流程正常工作。
-
-Step 1: 启动 Catalog 服务 (必须最先启动)
-Catalog 需要运行在后台，等待设备来询问 Broker 地址。
-
-
-    # 在项目根目录下
-    python Catalog/Catalog_manage.py
-    验证: 浏览器访问 http://127.0.0.1:8080 确认服务在线。
-
-    Step 2: 启动传感器模拟 (Sensors)
-    模拟全楼栋的数据采集设备。
-
-
-# 打开一个新的终端窗口
-    python Sensors/sensors_running.py
-    现象: 你会看到大量 --> Sent 日志，表示数据正在源源不断地发往 Broker。
-
-    Step 3: 启动执行器模拟 (Actuators)
-    模拟空调、开关等控制设备.
+    3. Dynamic Management: We provide a CLI tool to dynamically add or delete devices (by room, type, role, index) during runtime, instantly updating the Registry and Controller logic.
 
 
 
-# 打开另一个新的终端窗口
-    python Sensors/actuators_running.py
-    现象: 终端会显示 [*] Controller started... 并进入静默监听状态。你可以使用额外的 Publisher 脚本向它们发送指令进行测试。
-
-5. ⚙️ Configuration (配置说明)
-Catalog/setting_config.json
-这是系统的源头配置。如果你需要修改：
-
-    Catalog 地址: 修改 catalog_config。
-
-    MQTT Broker 地址: 修改 mqtt_config (注意：这里修改后，所有设备重启后会自动获取新地址，无需修改设备代码)。
-
-    房间容量/布局: 修改 rooms 列表。
-
-
-    {
-    "mqtt_config": {
-        "broker_address": "test.mosquitto.org", 
-        "topic_template": "polito/smartcampus/{room_id}/{device_type}/{index}"
-    },
-    "rooms": [
-        { "room_id": "R1", "type": "classroom", "capacity": 50 }
-    ]
-    }
-
-📡 MQTT Topic Strategy (Topic 策略说明)
-系统采用 Template Pattern (模板模式) 管理 MQTT Topic。
-
-1. 结构定义 (Topic Structure)
-Topic 的具体结构逻辑 定义在服务端代码 (Catalog_manage.py) 中，并通过服务发现接口 (/api/services) 动态下发给设备。
-
-当前定义的模板结构如下： "{base_topic_prefix}/{room_id}/{device_type}/{index}"
-
-{base_topic_prefix}: 读取自 setting_config.json (如 polito/smartcampus)。
-
-{room_id}: 房间号 (如 R1)。
-
-{device_type}: 设备类型 (如 temperature, wifi)。
-
-{index}: 设备编号 (如 1)。
-
-2. 后缀规范 (Suffix Standards)
-为了区分“数据上传”和“控制指令”，我们在基础 Topic 后增加了功能后缀：
-    <img width="677" height="331" alt="image" src="https://github.com/user-attachments/assets/f0d7ddcb-eb15-48a9-bbfd-41210876240a" />
 
