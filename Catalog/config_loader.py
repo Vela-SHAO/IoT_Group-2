@@ -53,17 +53,15 @@ class RoomConfigLoader:
 
     def get_room_config(self, target_room_id=None):
 
-        # 1. 提取全局信息 (Project Info)
+    
         project_info = self.data.get("project_info", {})
         campus = project_info.get("campus", "Unknown")
         rooms_list = self.data.get("rooms", [])
 
-        # 2. 如果没有指定房间，返回所有所有房间名称
         if not target_room_id:
             return [room["room_id"] for room in rooms_list]
 
 
-        # 3. 查找具体房间
         found_room = None
         for room in self.data.get("rooms", []):
             if room["room_id"] == target_room_id:
@@ -77,8 +75,8 @@ class RoomConfigLoader:
         return {
             "location": {
                 "campus": campus,
-                "building": found_room["building"],  # 用字母 "R"
-                "floor": found_room["floor"],      # 用数字 "0"
+                "building": found_room["building"],  
+                "floor": found_room["floor"],     
                 "room": target_room_id
             },
             "meta": {

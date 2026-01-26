@@ -6,7 +6,7 @@ sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")
 from Catalog.config_loader import RoomConfigLoader
 
 class GenericDevice:
-    def __init__(self, room="R1", index=1, sensor_type="unknown", role="unknown", frequency=10):
+    def __init__(self, room="R1", index=1, sensor_type="unknown", role="unknown", frequency=5):
 
         self.room = room
         self.index = index
@@ -101,6 +101,56 @@ class GenericDevice:
         except Exception as e:
             print(f"[-] Connection Error: {e}")
             return False
+        
+    def update_device_info(self, specific_topics):
+
+        print(f"[*] Updating {self.device_id} info in Catalog...")
+        device_url = f"{self.catalog_url}/devices/{self.device_id}"
+        
+        payload = {
+            "id": self.device_id,
+            "type": self.sensor_type,
+            "resources": list(specific_topics.keys()),
+            "mqtt_topics": specific_topics,
+            "update_interval": self.frequency,
+            "location": self.location
+        }
+
+        try:
+            res = requests.put(device_url, json=payload)
+            if res.status_code == 200:
+                print(f"[+] Updated: {self.device_id}")
+                return True
+            elif res.status_code == 201:
+                print(f"[+] Registered (via update): {self.device_id}")
+                return True
+            else:
+                print(f"[-] Catalog Refused!")
+                print(f"Status Code: {res.status_code}")
+                print(f"Response Text: {res.text}")
+                return False
+        except Exception as e:
+            print(f"[-] Connection Error: {e}")
+            return False
+    
+    def delete_from_catalog(self):
+        
+        print(f"[*] Deleting {self.device_id} from Catalog...")
+        device_url = f"{self.catalog_url}/devices/{self.device_id}"
+
+        try:
+            res = requests.delete(device_url)
+            if res.status_code == 200:
+                print(f"[+] Deleted: {self.device_id}")
+                return True
+            else:
+                print(f"[-] Catalog Refused!")
+                print(f"Status Code: {res.status_code}")
+                print(f"Response Text: {res.text}")
+                return False
+        except Exception as e:
+            print(f"[-] Connection Error: {e}")
+            return False                    
 
     def connect_mqtt(self):
         self.client = mqtt.Client(client_id=self.device_id)

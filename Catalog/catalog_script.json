@@ -649,13 +649,6 @@
       }
     }
   ],
-  "users": [
-    {
-      "id": "user_001",
-      "name": "Mya",
-      "role": "admin"
-    }
-  ],
   "services": [
     {
       "id": "service_thingspeak",
