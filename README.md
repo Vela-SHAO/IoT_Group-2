@@ -76,6 +76,64 @@ Our architecture follows the LinkSmart standards, adopting a three-step model: "
 
     3. Dynamic Management: We provide a CLI tool to dynamically add or delete devices (by room, type, role, index) during runtime, instantly updating the Registry and Controller logic.
 
+5. Dashboard (Front-end)
+The dashboard is responsible for visualizing all registered rooms, sensors, and actuators in the system, and for validating whether the system supports service discovery and live updates.
 
+This project includes two types of dashboards:
+Student Dashboard (read-only)
+Manager Dashboard (with control capabilities)
+
+   5.1 Dashboard Design Goals
+   The dashboard is designed with the following goals:
+   No hard-coded rooms
+   No hard-coded sensors or actuators
+   Automatic discovery of newly registered devices via the Catalog or Controller
+
+   While the dashboard is running:
+	•	Newly registered sensors or actuators
+	•	Newly appearing rooms
+   will be displayed automatically without any front-end code changes.
+
+   5.2 Data Source Strategy
+   The dashboard does not subscribe to MQTT directly.
+   Instead, it retrieves system state through HTTP APIs.
+
+   The currently supported data source is:Catalog API: GET http://127.0.0.1:8080/api/devices
+
+    Used to:
+	•	Discover all rooms registered in the system
+	•	Retrieve sensors and actuators under each room
+	•	Obtain the corresponding MQTT topics
+    (The Controller API can be used as an extension for real-time status and control.)
+
+    5.3 Student Dashboard
+    Location: Dashboard/student_dashboard.py
+    Functions:
+	•	Automatically displays all registered rooms
+	•	Displays sensors under each room
+	•	Displays corresponding MQTT topics
+	•	Read-only (no control actions)
+
+     How to run:streamlit run Dashboard/student_dashboard.py
+
+    5.4 Manager Dashboard
+    Location: Dashboard/Manager_dashboard.py
+
+    Functions:
+	•	Automatic discovery of rooms and actuators
+	•	Provides control buttons (e.g. HVAC ON / OFF)
+	•	Control commands are sent through the flow:
+    Dashboard → Controller → MQTT → Actuator
+
+    How to run:streamlit run Dashboard/Manager_dashboard.py
+
+    5.5 Test Room and Dynamic Discovery
+    To validate the system’s dynamic discovery capability, test rooms are allowed in the project.
+    Test rooms are not predefined in the front-end.
+    As long as a device is registered in the Catalog, even with room names such as “test” or “tesr”, the dashboard will automatically display it.
+
+    This mechanism is used to verify:
+	•	The robustness of the dashboard
+	•	The system’s ability to extend devices dynamically at runtime
 
 

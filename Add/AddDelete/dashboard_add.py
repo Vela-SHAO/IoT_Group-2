@@ -1,66 +1,109 @@
 import streamlit as st
+import requests
 import datetime
+import time
+
+CATALOG_URL = "http://127.0.0.1:8080/api/devices"
+REFRESH_SECONDS = 5
 
 st.set_page_config(
-    page_title="Demo - Test Room Dashboard",
+    page_title="Demo - Dynamic Device Dashboard",
     layout="wide"
 )
 
-st.title(" Demo - Test Room Dashboard")
-st.caption("Front-end demo only · Not connected to backend")
-st.write("Time:", datetime.datetime.now())
+st.markdown(
+    f"<meta http-equiv='refresh' content='{REFRESH_SECONDS}'>",
+    unsafe_allow_html=True
+)
+
+st.title(" Demo - Dynamic Test Room Dashboard")
+st.caption("Connected to Catalog · Auto device discovery")
+st.write("Last refresh:", datetime.datetime.now())
 
 st.markdown("---")
 
-st.subheader("🎓 Student View - Test Room (Demo)")
 
-col1, col2, col3, col4 = st.columns([2, 3, 3, 3])
+try:
+    resp = requests.get(CATALOG_URL, timeout=5)
+    resp.raise_for_status()
+    devices = resp.json()
+except Exception as e:
+    st.error(f"Cannot connect to Catalog: {e}")
+    st.stop()
+
+if not devices:
+    st.warning("No devices registered in Catalog.")
+    st.stop()
+
+
+rooms = {}
+
+for d in devices:
+    room = d.get("location", {}).get("room", "UNKNOWN")
+    rooms.setdefault(room, []).append(d)
+
+
+st.subheader("🎓 Student View (Auto-discovered rooms)")
+
+col1, col2, col3 = st.columns([3, 4, 5])
 col1.markdown("**Room ID**")
-col2.markdown("**Occupancy**")
-col3.markdown("**Temperature**")
-col4.markdown("**Availability**")
+col2.markdown("**Sensors**")
+col3.markdown("**MQTT Topics**")
 
 st.divider()
 
-c1, c2, c3, c4 = st.columns([2, 3, 3, 3])
-c1.markdown("**TEST_ROOM**")
-c2.markdown("— / —")
-c3.markdown("🌡 —")
-c4.markdown(" Demo only")
+for room, devs in sorted(rooms.items()):
+    sensor_list = []
+    topic_list = []
 
-st.caption("Student dashboard example · Read-only")
+    for d in devs:
+        if "val" in d.get("mqtt_topics", {}):
+            sensor_list.append(d["id"])
+            topic_list.append(d["mqtt_topics"]["val"])
+
+    c1, c2, c3 = st.columns([3, 4, 5])
+    c1.markdown(f"**{room}**")
+    c2.markdown(", ".join(sensor_list) if sensor_list else "—")
+    c3.markdown("<br>".join(topic_list), unsafe_allow_html=True)
+
+st.caption("Student dashboard · Devices appear automatically when registered")
 
 st.markdown("---")
 
-st.subheader(" Manager View - Test Room (Demo)")
 
-col1, col2, col3, col4, col5 = st.columns([2, 2, 3, 2, 3])
+st.subheader(" Manager View (Actuators discovered)")
+
+col1, col2, col3 = st.columns([3, 5, 4])
 col1.markdown("**Room ID**")
-col2.markdown("**Status**")
-col3.markdown("**Temperature**")
-col4.markdown("**Occupancy**")
-col5.markdown("**Control**")
+col2.markdown("**Actuators**")
+col3.markdown("**Command Topic**")
 
 st.divider()
 
-m1, m2, m3, m4, m5 = st.columns([2, 2, 3, 2, 3])
+for room, devs in sorted(rooms.items()):
+    actuators = []
+    cmd_topics = []
 
-m1.markdown("**TEST_ROOM**")
-m2.markdown(" Demo")
-m3.markdown("🌡 —")
-m4.markdown("— / —")
+    for d in devs:
+        if "cmd" in d.get("mqtt_topics", {}):
+            actuators.append(d["id"])
+            cmd_topics.append(d["mqtt_topics"]["cmd"])
 
-if m5.button("Turn HVAC ON (Demo)"):
-    st.info("Demo action only. No command sent to backend.")
+    m1, m2, m3 = st.columns([3, 5, 4])
+    m1.markdown(f"**{room}**")
+    m2.markdown(", ".join(actuators) if actuators else "—")
+    m3.markdown("<br>".join(cmd_topics), unsafe_allow_html=True)
 
-st.caption("Manager dashboard example · Control buttons are demo only")
+st.caption("Manager dashboard · Control wiring visible (demo only)")
 
 st.markdown("---")
 
 st.markdown("""
- **Important**  
-- This page is a **front-end demo only**  
-- It does **not** connect to Controller or Catalog  
-- It does **not** affect real rooms or HVAC  
-- Used only to demonstrate how a *test room* would be displayed
+**What this demo proves**
+- ✔ New room appears automatically  
+- ✔ New sensor / actuator appears automatically  
+- ✔ No hard-coded TEST_ROOM  
+- ✔ Frontend reflects Catalog state in real time  
+
+This is a **real dynamic test-room demo**, not a mock.
 """)
