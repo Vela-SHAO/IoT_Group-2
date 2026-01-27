@@ -7,7 +7,7 @@ from datetime import datetime, timezone
 import time
 
 import random
-# 保持对 ThermalLogic 的引用
+# Maintain reference to ThermalLogic
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 if BASE_DIR not in sys.path:
     sys.path.insert(0, BASE_DIR)
@@ -19,7 +19,7 @@ class OccupancyAnalyzer:
         self.catalog_url = catalog_url
         self.occupancy_cache = {}
         
-        # 加载静态课表（仍使用本地文件）
+        # Load static schedule (still using local file)
         schedule_path = os.path.join(BASE_DIR, "schedule.json")
         with open(schedule_path, 'r', encoding='utf-8') as f:
             self.schedule = json.load(f)
@@ -27,7 +27,7 @@ class OccupancyAnalyzer:
         print(f"[*] Fetching MQTT config from Catalog: {self.catalog_url}")
         try:
             response = requests.get(f"{self.catalog_url}/api/services")
-            # 增加检查：如果响应为空或不是 200，则跳过
+            # Validation: Skip if response is empty or not 200
             if response.status_code == 200 and response.text.strip():
                 services = response.json()
                 mqtt_service = next((s for s in services if s.get("service_type") == "mqtt"), None)
@@ -37,27 +37,27 @@ class OccupancyAnalyzer:
                     self.port = mqtt_service["endpoint"]["broker_port"]
                     self.topic_structure = mqtt_service["endpoint"]["topic_structure"]
                     print(f"[*] Config Loaded from Catalog: {self.broker}:{self.port}")
-                    return # 成功拿到配置，退出初始化
+                    return # Successfully retrieved config, exit init
             
             raise ValueError("MQTT service not found in Catalog response")
 
         except Exception as e:
-            # --- 容错方案：如果 Catalog 没给数据，使用默认值 ---
+            # --- Fallback: Use default config if Catalog fails to provide data ---
             print(f"[!] Warning: Falling back to default config due to: {e}")
             self.broker = "test.mosquitto.org"
             self.port = 1883
             self.topic_structure = "polito/smartcampus/{room_id}/{device_type}/{index_number}"
 
     def get_dynamic_topic(self, room_id, device_type, index="1"):
-        """按照 Mya 的结构生成 Topic: polito/smartcampus/{room}/{type}/{index}"""
+        """Generate Topic based on Mya's structure: polito/smartcampus/{room}/{type}/{index}"""
         return self.topic_structure.replace("{room_id}", room_id)\
                                    .replace("{device_type}", device_type)\
                                    .replace("{index_number}", index)
 
     def on_connect(self, client, userdata, flags, rc):
         if rc == 0:
-            # 订阅所有房间的 wifi 传感器数据 (用于统计人数)
-            # 根据 Mya 的结构，wifi 数据的 Topic 是 .../{room_id}/wifi/{index}/value
+            # Subscribe to wifi sensor data for all rooms (for occupancy tracking)
+            # Based on Mya's structure, wifi topic is .../{room_id}/wifi/{index}/value
             sub_topic = self.get_dynamic_topic("+", "wifi", "+") + "/value"
             client.subscribe(sub_topic)
             print(f"[*] Success! Subscribed to: {sub_topic}")
@@ -66,7 +66,7 @@ class OccupancyAnalyzer:
 
     def on_message(self, client, userdata, msg):
         try:
-            # 解析 Topic 拿到 room_id (例如: polito/smartcampus/R1/wifi/1/value)
+            # Parse Topic to get room_id
             parts = msg.topic.split('/')
             room_id = parts[2]
             count = int(msg.payload.decode())
@@ -76,21 +76,19 @@ class OccupancyAnalyzer:
 
     def process_analysis(self, room_id, count):
         try:
-            # 2. 从 Catalog 获取房间的 meta 信息（比如容量）
-            # Mya 的 Catalog 提供了 /api/devices?room=R1 的过滤功能
+            # 2. Get room meta info (e.g., capacity) from Catalog
+            # Mya's Catalog provides filtering via /api/devices?room=R1
             dev_resp = requests.get(f"{self.catalog_url}/api/devices", params={"room": room_id, "type": "temperature"})
             devices = dev_resp.json()
             
-            # 如果 Catalog 里没找到这个房间，默认用 30 人
+           # Default to 30 people if room is not found in Catalog
             capacity = 30
             if devices:
-                # 假设我们从第一个关联设备的 location meta 里拿容量 (或根据 Mya 的结构调整)
-                capacity = 30 # 这里可以根据 Mya 真实的 device 结构进一步细化获取方式
 
-            # 3. 核心逻辑判断
+            # 3. Core logic decision
             ac_on = decide_hvac_status(28, count, capacity)
             
-            # 4. 生成分析结果 JSON
+            # 4. Generate Analysis Result JSON
             analysis_result = {
                 "room_id": room_id,
                 "status": "occupied" if count > 0 else "free",
@@ -98,7 +96,7 @@ class OccupancyAnalyzer:
                 "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S")
             }
 
-            # 5. 【Mya 的核心要求】Post back 给 Catalog 注册/更新状态
+            # 5. Post back to Catalog to register/update status
             requests.post(f"{self.catalog_url}/api/devices", json={
                 "id": f"Analysis_{room_id}",
                 "type": "analysis_result",
@@ -120,18 +118,8 @@ class OccupancyAnalyzer:
         client.connect(self.broker, self.port, 60)
         client.loop_forever()
 
-# if __name__ == "__main__":
-#     # 传入 Catalog 的地址
-#     analyzer = OccupancyAnalyzer("http://127.0.0.1:8080")
-#     analyzer.start()
-        
 
-
-
-
-
-
-#模拟用，之后可以替换成真实数据。
+# For simulation, can be replaced with real data later.
 class simulate:
     def simu_people(capacity,isAvailavle:bool)-> int:
 
@@ -153,13 +141,13 @@ class simulate:
 
 
 
-#现在课表是每天一致的。后期再优化周几的问题吧。目前只做小时：分钟的匹配。
+# Current schedule is consistent daily. Optimization for weekdays to be added later. Hour:minute matching only.
 def read_nonOccupiedScedule(schedule_path)->dict[str,list]:
     with open(schedule_path,"r",encoding="utf-8")as file:
         available_schedule = json.load(file)
         return available_schedule
     
-#计算落在哪个时间段    
+# Determine time slot    
 def match_slot(hour:int, minute:int,slot_count)->int|None:
     start = 8*60 +30 #slot1 start 8:30
     end = 19*60 #slot 7 end at 19:00
@@ -189,7 +177,7 @@ def parse_timestamp(timestamp)->dict:
     }
 
 #get non occupied room from json 
-#后续可以考虑是否加入weekday
+# Consider adding weekday filtering later
 def get_available_room(request_hour,request_minute,schedule_path)->list:
 
 
