@@ -18,8 +18,11 @@
 │   ├── device_delete.py      # delete device
 │   └── sensor_add.py         # add sensor
 │   └── wifi_sensor_add.py.   # add wifi sensor when new device is running
+|
+└── Controller/               # [Intelligence side] Data process of the system
+    	├── OccupancyAnalyzer.py  # Main analyzer: implements MQTT data parsing and service discovery logic
 
-2. HOW TO RUN 
+3. HOW TO RUN 
 Strict Order Required: Catalog → Sensors → Actuators.
 
     1. Start Catalog (Infrastructure)
@@ -37,7 +40,7 @@ Strict Order Required: Catalog → Sensors → Actuators.
         Opens a new terminal.
         python Sensors/actuators_running.py
         Behavior: Devices auto-register, publish initial status, and enter listening mode ([*] Controller started...) to await /cmd.
-
+	
     4. Dynamic Management
         Run CLI tools to add/remove devices at runtime without restarting the system.
 
@@ -49,7 +52,7 @@ Strict Order Required: Catalog → Sensors → Actuators.
         Usage: Follow the prompts (Room/Type/Role/Index). Press Enter to use wildcards.
         Effect: Instantly updates the Catalog Registry and Controller logic.
 
-3. System Explanation
+4. System Explanation
 Our architecture follows the LinkSmart standards, adopting a three-step model: "Bootstrapping -> Discovery -> Operation".
 
     1. Bootstrapping: Devices boot using only the local setting_config.json to find the Catalog URL.
@@ -65,7 +68,7 @@ Our architecture follows the LinkSmart standards, adopting a three-step model: "
         Actuators: Subscribe to .../cmd for control and publish to .../status for feedback.
    
 
-4. Logic & Simulation
+5. Logic & Simulation
     1. Sensor Algorithms:
 
         Wi-Fi (People Count): Uses a Random Walk algorithm (previous value ± random fluctuation) constrained by room capacity to simulate realistic crowd flow.
@@ -76,7 +79,7 @@ Our architecture follows the LinkSmart standards, adopting a three-step model: "
 
     3. Dynamic Management: We provide a CLI tool to dynamically add or delete devices (by room, type, role, index) during runtime, instantly updating the Registry and Controller logic.
 
-5. Dashboard (Front-end)
+6. Dashboard (Front-end)
 The dashboard is responsible for visualizing all registered rooms, sensors, and actuators in the system, and for validating whether the system supports service discovery and live updates.
 
 This project includes two types of dashboards:
