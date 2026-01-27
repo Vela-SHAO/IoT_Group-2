@@ -98,7 +98,78 @@ Catalog 需要运行在后台，等待设备来询问 Broker 地址。
     python Sensors/actuators_running.py
     现象: 终端会显示 [*] Controller started... 并进入静默监听状态。你可以使用额外的 Publisher 脚本向它们发送指令进行测试。
 
-5. ⚙️ Configuration (配置说明)
+5. 🖥 Dashboard (Front-end)
+    Dashboard 负责将系统中已注册的 Rooms / Sensors / Actuators 以可视化方式呈现，
+    并验证系统是否具备 **Service Discovery** 与 **Live Update** 能力。
+
+本项目包含两类 Dashboard：
+
+- Student Dashboard（只读） 
+- Manager Dashboard（可控制）
+
+---
+
+5.1 Dashboard Design Goals
+Dashboard 的设计目标是：
+
+  不写死任何房间（No hard-coded rooms）
+  不写死任何设备（No hard-coded sensors / actuators）
+  通过 Catalog / Controller **自动发现新加入的设备**
+  当前端运行时：
+  - 新 sensor / actuator 被注册
+  - 新 room 出现  
+  前端无需修改代码即可自动显示
+
+5.2 Data Source Strategy
+Dashboard **不直接订阅 MQTT**，而是通过 HTTP 接口获取系统状态。
+
+当前支持的数据来源包括：
+
+   Catalog API  GET http://127.0.0.1:8080/api/devices
+用于：
+  发现当前系统中已注册的 rooms
+  获取每个 room 下的 sensors / actuators
+  获取对应的 MQTT topics
+
+（Controller API 可作为扩展，用于实时状态 / 控制）
+
+5.3 Student Dashboard
+位置：Dashboard/student_dashboard.py
+功能：
+  自动展示所有已注册房间
+  显示每个房间下的 sensors
+  显示对应 MQTT topic
+  只读（Read-only）
+
+启动方式：
+   streamlit run Dashboard/student_dashboard.py
+
+5.4 Manager Dashboard
+位置：Dashboard/Manager_dashboard.py
+功能：
+	•	自动发现房间与执行器
+	•	提供控制按钮（如 HVAC ON/OFF）
+	•	控制指令将通过 Controller → MQTT → Actuator
+
+启动方式：
+    streamlit run Dashboard/Manager_dashboard.py
+
+5.5 Test Room & Dynamic Discovery
+为了验证系统的动态发现能力，项目中允许存在 Test Room：
+	•	Test Room 不是预定义在前端
+	•	只要有设备注册到 Catalog（即使房间名是 test / tesr）
+	•	Dashboard 会自动展示
+
+该机制用于验证：
+	•	Dashboard 的鲁棒性
+	•	系统在运行时扩展设备的能力
+
+位置：demo/dashboard_demo.py
+启动方式：
+streamlit run demo/dashboard_demo.py
+
+
+6. ⚙️ Configuration (配置说明)
 Catalog/setting_config.json
 这是系统的源头配置。如果你需要修改：
 
