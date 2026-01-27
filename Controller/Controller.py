@@ -14,7 +14,7 @@ PROJECT_ROOT = os.path.abspath(
 )
 sys.path.insert(0, PROJECT_ROOT)
 
-import OccupancyAnalyzer
+import Controller.OccupancyAnalyzer as OccupancyAnalyzer
 
 import requests
 
@@ -73,7 +73,7 @@ class Controller:
     def _catalog_get_devices(self, **query_params) -> list:
         """
         GET {catalog_base_url}/devices?...
-        返回 devices 列表（JSON）
+        返回 devices 列表JSON
         """
         url = f"{self.catalog_base_url}/devices"
         res = requests.get(url, params=query_params, timeout=5)

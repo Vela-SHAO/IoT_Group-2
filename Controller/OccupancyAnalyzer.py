@@ -86,7 +86,7 @@ class OccupancyAnalyzer:
             if devices:
 
             # 3. Core logic decision
-            ac_on = decide_hvac_status(28, count, capacity)
+                ac_on = decide_hvac_status(28, count, capacity)
             
             # 4. Generate Analysis Result JSON
             analysis_result = {
