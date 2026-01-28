@@ -20,10 +20,19 @@
 │   └── wifi_sensor_add.py.   # add wifi sensor when new device is running
 |
 └── Controller/               # [Intelligence side] Data process of the system,
-    ├── OccupancyAnalyzer.py  # Main analyzer: Make decision by the 'snapshot' from Controller
-    └── Controller.py         # subscribe '/value' ,upadate'snapshot' and periodly publish '/cmd'
+|    ├── OccupancyAnalyzer.py  # Main analyzer: Make decision by the 'snapshot' from Controller
+|    └── Controller.py         # subscribe '/value' ,upadate'snapshot' and periodly publish '/cmd'
+|
+└── Dashboard/               # Dashboard
+│   ├── student_dashboard.py      # Dashboard for student usage(read-only)
+│   ├── Manager_dashboard.py      # Dashboard for manager usage(with control capabilities)
+|
+|—— ├── setting_config.json   # All the MQTT and HTTP setting info, the basic room info
+|——	├── schedule.json         # Room occupied schedule
+|
 
-2. HOW TO RUN 
+
+3. HOW TO RUN 
 Strict Order Required: Catalog → Sensors → Actuators.
 
     1. Start Catalog (Infrastructure)
@@ -46,9 +55,15 @@ Strict Order Required: Catalog → Sensors → Actuators.
         Opens a new terminal.
         python Controller\Controller.py
         Behavior: MQTT connect successfully, Catalog topics loaded / refresh， decision loop.
+       
+    6. Start Dashboard
+       Opens a new terminal.
+       python Dashboard/student_dashboard.py
+       python Dashboard/Manager_dashboard.py
+       Behavior: Automatically displays all registered rooms status and managers are able to command back to actuators
 
     
-    5. Dynamic Management
+    8. Dynamic Management
         Run CLI tools to add/remove devices at runtime without restarting the system.
 
         python Add/Delete/sensor_add.py
@@ -59,7 +74,7 @@ Strict Order Required: Catalog → Sensors → Actuators.
         Usage: Follow the prompts (Room/Type/Role/Index). Press Enter to use wildcards.
         Effect: Instantly updates the Catalog Registry and Controller logic.
 
-3. System Explanation
+4. System Explanation
 Our architecture follows the LinkSmart style / pattern, adopting a three-step model: "Bootstrapping -> Discovery -> Operation".
 
     1. Bootstrapping: Devices boot using only the local setting_config.json to find the Catalog URL.
@@ -75,7 +90,7 @@ Our architecture follows the LinkSmart style / pattern, adopting a three-step mo
         Actuators: Subscribe to .../cmd for control and publish to .../status for feedback.
    
 
-4. Logic & Simulation
+5. Logic & Simulation
     1. Sensor Algorithms:
 
         Wi-Fi (People Count): Uses a Random Walk algorithm (previous value ± random fluctuation) constrained by room capacity to simulate realistic crowd flow.
@@ -88,12 +103,7 @@ Our architecture follows the LinkSmart style / pattern, adopting a three-step mo
 
 
 
-5. Dashboard (Front-end)
-    The dashboard is responsible for visualizing all registered rooms, sensors, and actuators in the system, and for validating whether the system supports service discovery and live updates.
-
-    This project includes two types of dashboards:
-    Student Dashboard (read-only)
-    Manager Dashboard (with control capabilities)
+6. Dashboard (Front-end)
 
     5.1 Dashboard Design Goals
     The dashboard is designed with the following goals:
@@ -110,47 +120,8 @@ Our architecture follows the LinkSmart style / pattern, adopting a three-step mo
     The dashboard does not subscribe to MQTT directly.
     Instead, it retrieves system state through HTTP APIs.
 
-    The currently supported data source is:Catalog API: GET http://127.0.0.1:8080/api/devices
 
-        Used to:
-        •	Discover all rooms registered in the system
-        •	Retrieve sensors and actuators under each room
-        •	Obtain the corresponding MQTT topics
-        (The Controller API can be used as an extension for real-time status and control.)
-
-        5.3 Student Dashboard
-        Location: Dashboard/student_dashboard.py
-        Functions:
-        •	Automatically displays all registered rooms
-        •	Displays sensors under each room
-        •	Displays corresponding MQTT topics
-        •	Read-only (no control actions)
-
-        How to run:streamlit run Dashboard/student_dashboard.py
-
-        5.4 Manager Dashboard
-        Location: Dashboard/Manager_dashboard.py
-
-        Functions:
-        •	Automatic discovery of rooms and actuators
-        •	Provides control buttons (e.g. HVAC ON / OFF)
-        •	Control commands are sent through the flow:
-        Dashboard → Controller → MQTT → Actuator
-
-        How to run:streamlit run Dashboard/Manager_dashboard.py
-
-        5.5 Test Room and Dynamic Discovery
-        To validate the system’s dynamic discovery capability, test rooms are allowed in the project.
-        Test rooms are not predefined in the front-end.
-        As long as a device is registered in the Catalog, even with room names such as “test” or “tesr”, the dashboard will automatically display it.
-        The dashboard discovers rooms from Catalog metadata, while the Controller requires actual /value data to include a room in snapshot and decision-making.
-
-        This mechanism is used to verify:
-        •	The robustness of the dashboard
-        •	The system’s ability to extend devices dynamically at runtime
-
-
-6. Notes / Troubleshooting
+7. Notes / Troubleshooting
     1.  Dynamic registration boundary (Catalog vs MQTT data)
         Dynamic Management updates Catalog registry immediately.
         A newly registered room/device will not produce /value data unless the corresponding sensor simulator (or real device) is running.
