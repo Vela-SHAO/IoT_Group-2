@@ -14,7 +14,7 @@ PROJECT_ROOT = os.path.abspath(
 )
 sys.path.insert(0, PROJECT_ROOT)
 
-import Controller.OccupancyAnalyzer as OccupancyAnalyzer
+import OccupancyAnalyzer as OccupancyAnalyzer
 
 import requests
 

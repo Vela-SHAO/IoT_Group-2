@@ -13,7 +13,7 @@
 |   ├── sensors_running.py    # [Startup script] Multithreaded launch of sensors for the entire building
 |   └── actuators_running.py  # [Startup script] Multithreaded launch of actuators for the entire building
 |
-└── Add/Delete/               # [Add of delete side] Simulator module
+└── Add&Delete/               # [Add of delete side] Simulator module
 │   ├── actuator_add.py       # add actuator
 │   ├── device_delete.py      # delete device
 │   └── sensor_add.py         # add sensor
@@ -66,7 +66,7 @@ Strict Order Required: Catalog → Sensors → Actuators.
     8. Dynamic Management
         Run CLI tools to add/remove devices at runtime without restarting the system.
 
-        python Add/Delete/sensor_add.py
+        python Add&Delete/sensor_add.py
         # or python Add/Delete/actuator_add.py
         # or python Add/Delete/wifi_sensor_add.py
         # or python Add/Delete/device_delete.py

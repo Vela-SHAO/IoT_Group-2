@@ -541,73 +541,20 @@
         "floor": "1",
         "room": "RS2"
       }
-    },
-    {
-      "id": "test1_temperature_sensor_2",
-      "type": "temperature",
-      "resources": [
-        "val"
-      ],
-      "mqtt_topics": {
-        "val": "polito/smartcampus/test1/temperature/2/value"
-      },
-      "update_interval": 5,
-      "location": {
-        "campus": "Unknown",
-        "building": "Unknown",
-        "floor": "0",
-        "room": "test1"
-      }
-    },
-    {
-      "id": "test1_temperature_actuator_2",
-      "type": "temperature",
-      "resources": [
-        "cmd",
-        "status"
-      ],
-      "mqtt_topics": {
-        "cmd": "polito/smartcampus/test1/temperature/2/cmd",
-        "status": "polito/smartcampus/test1/temperature/2/status"
-      },
-      "update_interval": 5,
-      "location": {
-        "campus": "Unknown",
-        "building": "Unknown",
-        "floor": "0",
-        "room": "test1"
-      }
-    },
-    {
-      "id": "test1_wifi_sensor_2",
-      "type": "wifi",
-      "resources": [
-        "val"
-      ],
-      "mqtt_topics": {
-        "val": "polito/smartcampus/test1/wifi/2/value"
-      },
-      "update_interval": 5,
-      "location": {
-        "campus": "Unknown",
-        "building": "Unknown",
-        "floor": "0",
-        "room": "test1"
-      }
     }
   ],
   "services": [
-  {
-    "id": "service_thingspeak",
-    "description": "Thingspeak Adaptor"
-  },
-  {
-    "id": "service_dashboard",
-    "description": "Smart Campus Dashboards",
-    "endpoint": {
-      "student": "http://127.0.0.1:8501",
-      "manager": "http://127.0.0.1:8502"
+    {
+      "id": "service_thingspeak",
+      "description": "Thingspeak Adaptor"
+    },
+    {
+      "id": "service_dashboard",
+      "description": "Smart Campus Dashboards",
+      "endpoint": {
+        "student": "http://127.0.0.1:8501",
+        "manager": "http://127.0.0.1:8502"
+      }
     }
-  }
- ]
+  ]
 }
