@@ -14,109 +14,109 @@ if BASE_DIR not in sys.path:
 
 from ThermalLogic import decide_hvac_status
 
-class OccupancyAnalyzer:
-    def __init__(self, catalog_url):
-        self.catalog_url = catalog_url
-        self.occupancy_cache = {}
+# class OccupancyAnalyzer:
+#     def __init__(self, catalog_url):
+#         self.catalog_url = catalog_url
+#         self.occupancy_cache = {}
         
-        # Load static schedule (still using local file)
-        schedule_path = os.path.join(BASE_DIR, "schedule.json")
-        with open(schedule_path, 'r', encoding='utf-8') as f:
-            self.schedule = json.load(f)
+#         # Load static schedule (still using local file)
+#         schedule_path = os.path.join(BASE_DIR, "schedule.json")
+#         with open(schedule_path, 'r', encoding='utf-8') as f:
+#             self.schedule = json.load(f)
 
-        print(f"[*] Fetching MQTT config from Catalog: {self.catalog_url}")
-        try:
-            response = requests.get(f"{self.catalog_url}/api/services")
-            # Validation: Skip if response is empty or not 200
-            if response.status_code == 200 and response.text.strip():
-                services = response.json()
-                mqtt_service = next((s for s in services if s.get("service_type") == "mqtt"), None)
+#         print(f"[*] Fetching MQTT config from Catalog: {self.catalog_url}")
+#         try:
+#             response = requests.get(f"{self.catalog_url}/api/services")
+#             # Validation: Skip if response is empty or not 200
+#             if response.status_code == 200 and response.text.strip():
+#                 services = response.json()
+#                 mqtt_service = next((s for s in services if s.get("service_type") == "mqtt"), None)
                 
-                if mqtt_service:
-                    self.broker = mqtt_service["endpoint"]["broker"]
-                    self.port = mqtt_service["endpoint"]["broker_port"]
-                    self.topic_structure = mqtt_service["endpoint"]["topic_structure"]
-                    print(f"[*] Config Loaded from Catalog: {self.broker}:{self.port}")
-                    return # Successfully retrieved config, exit init
+#                 if mqtt_service:
+#                     self.broker = mqtt_service["endpoint"]["broker"]
+#                     self.port = mqtt_service["endpoint"]["broker_port"]
+#                     self.topic_structure = mqtt_service["endpoint"]["topic_structure"]
+#                     print(f"[*] Config Loaded from Catalog: {self.broker}:{self.port}")
+#                     return # Successfully retrieved config, exit init
             
-            raise ValueError("MQTT service not found in Catalog response")
+#             raise ValueError("MQTT service not found in Catalog response")
 
-        except Exception as e:
-            # --- Fallback: Use default config if Catalog fails to provide data ---
-            print(f"[!] Warning: Falling back to default config due to: {e}")
-            self.broker = "test.mosquitto.org"
-            self.port = 1883
-            self.topic_structure = "polito/smartcampus/{room_id}/{device_type}/{index_number}"
+#         except Exception as e:
+#             # --- Fallback: Use default config if Catalog fails to provide data ---
+#             print(f"[!] Warning: Falling back to default config due to: {e}")
+#             self.broker = "test.mosquitto.org"
+#             self.port = 1883
+#             self.topic_structure = "polito/smartcampus/{room_id}/{device_type}/{index_number}"
 
-    def get_dynamic_topic(self, room_id, device_type, index="1"):
-        """Generate Topic based on Mya's structure: polito/smartcampus/{room}/{type}/{index}"""
-        return self.topic_structure.replace("{room_id}", room_id)\
-                                   .replace("{device_type}", device_type)\
-                                   .replace("{index_number}", index)
+#     def get_dynamic_topic(self, room_id, device_type, index="1"):
+#         """Generate Topic based on Mya's structure: polito/smartcampus/{room}/{type}/{index}"""
+#         return self.topic_structure.replace("{room_id}", room_id)\
+#                                    .replace("{device_type}", device_type)\
+#                                    .replace("{index_number}", index)
 
-    def on_connect(self, client, userdata, flags, rc):
-        if rc == 0:
-            # Subscribe to wifi sensor data for all rooms (for occupancy tracking)
-            # Based on Mya's structure, wifi topic is .../{room_id}/wifi/{index}/value
-            sub_topic = self.get_dynamic_topic("+", "wifi", "+") + "/value"
-            client.subscribe(sub_topic)
-            print(f"[*] Success! Subscribed to: {sub_topic}")
-        else:
-            print(f"[!] Connection failed with code {rc}")
+#     def on_connect(self, client, userdata, flags, rc):
+#         if rc == 0:
+#             # Subscribe to wifi sensor data for all rooms (for occupancy tracking)
+#             # Based on Mya's structure, wifi topic is .../{room_id}/wifi/{index}/value
+#             sub_topic = self.get_dynamic_topic("+", "wifi", "+") + "/value"
+#             client.subscribe(sub_topic)
+#             print(f"[*] Success! Subscribed to: {sub_topic}")
+#         else:
+#             print(f"[!] Connection failed with code {rc}")
 
-    def on_message(self, client, userdata, msg):
-        try:
-            # Parse Topic to get room_id
-            parts = msg.topic.split('/')
-            room_id = parts[2]
-            count = int(msg.payload.decode())
-            self.process_analysis(room_id, count)
-        except Exception as e:
-            print(f"[ERROR] on_message: {e}")
+#     def on_message(self, client, userdata, msg):
+#         try:
+#             # Parse Topic to get room_id
+#             parts = msg.topic.split('/')
+#             room_id = parts[2]
+#             count = int(msg.payload.decode())
+#             self.process_analysis(room_id, count)
+#         except Exception as e:
+#             print(f"[ERROR] on_message: {e}")
 
-    def process_analysis(self, room_id, count):
-        try:
-            # 2. Get room meta info (e.g., capacity) from Catalog
-            # Mya's Catalog provides filtering via /api/devices?room=R1
-            dev_resp = requests.get(f"{self.catalog_url}/api/devices", params={"room": room_id, "type": "temperature"})
-            devices = dev_resp.json()
+#     def process_analysis(self, room_id, count):
+#         try:
+#             # 2. Get room meta info (e.g., capacity) from Catalog
+#             # Mya's Catalog provides filtering via /api/devices?room=R1
+#             dev_resp = requests.get(f"{self.catalog_url}/api/devices", params={"room": room_id, "type": "temperature"})
+#             devices = dev_resp.json()
             
-           # Default to 30 people if room is not found in Catalog
-            capacity = 30
-            if devices:
+#            # Default to 30 people if room is not found in Catalog
+#             capacity = 30
+#             if devices:
 
-            # 3. Core logic decision
-                ac_on = decide_hvac_status(28, count, capacity)
+#             # 3. Core logic decision
+#                 ac_on = decide_hvac_status(28, count, capacity)
             
-            # 4. Generate Analysis Result JSON
-            analysis_result = {
-                "room_id": room_id,
-                "status": "occupied" if count > 0 else "free",
-                "hvac_status": "ON" if ac_on else "OFF",
-                "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-            }
+#             # 4. Generate Analysis Result JSON
+#             analysis_result = {
+#                 "room_id": room_id,
+#                 "status": "occupied" if count > 0 else "free",
+#                 "hvac_status": "ON" if ac_on else "OFF",
+#                 "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+#             }
 
-            # 5. Post back to Catalog to register/update status
-            requests.post(f"{self.catalog_url}/api/devices", json={
-                "id": f"Analysis_{room_id}",
-                "type": "analysis_result",
-                "resources": ["status", "hvac"],
-                "mqtt_topics": {"val": self.get_dynamic_topic(room_id, "analysis")},
-                "location": {"campus": "POLITO", "building": "R", "floor": "0", "room": room_id},
-                "last_value": analysis_result
-            })
+#             # 5. Post back to Catalog to register/update status
+#             requests.post(f"{self.catalog_url}/api/devices", json={
+#                 "id": f"Analysis_{room_id}",
+#                 "type": "analysis_result",
+#                 "resources": ["status", "hvac"],
+#                 "mqtt_topics": {"val": self.get_dynamic_topic(room_id, "analysis")},
+#                 "location": {"campus": "POLITO", "building": "R", "floor": "0", "room": room_id},
+#                 "last_value": analysis_result
+#             })
 
-            print(f"[SENT TO CATALOG] {room_id}: {analysis_result['status']}")
+#             print(f"[SENT TO CATALOG] {room_id}: {analysis_result['status']}")
 
-        except Exception as e:
-            print(f"[ERROR] analysis: {e}")
+#         except Exception as e:
+#             print(f"[ERROR] analysis: {e}")
 
-    def start(self):
-        client = mqtt.Client()
-        client.on_connect = self.on_connect
-        client.on_message = self.on_message
-        client.connect(self.broker, self.port, 60)
-        client.loop_forever()
+#     def start(self):
+#         client = mqtt.Client()
+#         client.on_connect = self.on_connect
+#         client.on_message = self.on_message
+#         client.connect(self.broker, self.port, 60)
+#         client.loop_forever()
 
 
 # For simulation, can be replaced with real data later.
